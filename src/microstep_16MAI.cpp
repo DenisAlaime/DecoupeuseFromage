@@ -12,6 +12,8 @@
 
 #include <Arduino.h>
 #include <FlexyStepper.h>
+#include <StateMachine.h>
+#include "Button.h"
 
 //initialisation des sorties
 const int M_grille = 12; //moteur A
@@ -50,7 +52,7 @@ const int BP_auto = 36;
 const int BP_tranche = 30; 
 const int BP_cube = 32; 
 const int BP_batonnet = 31; 
-const int BP_start = 22; 
+#define  BP_start  22 
 const int BP_stop = 20; //pin interrup
 const int BP_resetPosition = 23; 
 const int BP_manu_avancer_M_avancer = 40;
@@ -112,6 +114,40 @@ long Valeur_D_M_decoupe1 = -1; //1 ou -1, il s agit du sens de rotation du moteu
 long Valeur_D_M_decoupe2 = 1;
 long Valeur_D_M_avancer = 1;
 long Valeur_D_M_grille = 1;
+
+
+const int STATE_DELAY = 10;
+const int LED = 13;
+Button BP_Start(BP_start); // Connect your button between pin 2 and GND
+
+StateMachine machine = StateMachine();
+void state0();
+void state1();
+// void state2();
+// void state3();
+// void state4();
+// void state5();
+// void state6();
+
+bool transitionS0S1();
+// bool transitionS1S2();
+// bool transitionS2S3();
+// bool transitionS3S4();
+// bool transitionS4S5();
+
+// bool transitionS5S6();
+// bool transitionS6S0();
+
+
+// bool transitionS5S2();
+bool transitionS1S0();
+
+State* S0 = machine.addState(&state0);// mode manuel
+State* S1 = machine.addState(&state1);// début du mode automatique
+// State* S2 = machine.addState(&state2);
+// State* S3 = machine.addState(&state3);
+// State* S4 = machine.addState(&state4);
+// State* S5 = machine.addState(&state5);
 
 FlexyStepper stepper_M_decoupe1;
 FlexyStepper stepper_M_decoupe2;
@@ -176,6 +212,43 @@ Serial.begin(9600);
     flagStop = LOW;           //stop désactivé
     flagPorteOuverte = LOW;   //porte fermée, cad capteur actif
 }
+
+
+//=======================================
+void state0(){
+  //Serial.println("State 0");
+  //remonté du vérin
+    
+
+    
+}
+bool transitionS0S1(){
+  
+  if (BP_Start.released()){
+    Serial.println("state0 =>state1");
+    return true;
+  }   
+}
+
+void state1(){
+  //Serial.println("State 0");
+  //remonté du vérin
+
+   // BP_start
+
+    
+}
+bool transitionS1S2(){
+  
+  // if (button1.released()){
+  //   Serial.println("state0 =>state1");
+  //   return true;
+  // }   
+}
+
+
+
+
 
 void loop() {
 
@@ -612,7 +685,7 @@ void trancheuse()
     }
 
     //remontée de la trancheuse
-    if(NbPas_M_decoupe1 >= 34800 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW) 
+    if( NbPas_M_decoupe1 >= 34800 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW) 
     {
       Serial.print("Num etape: ");
       Serial.println(Etape);
