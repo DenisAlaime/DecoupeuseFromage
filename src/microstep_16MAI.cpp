@@ -265,7 +265,7 @@ void state1(){
         stepper_M_grille.setTargetPositionInSteps(20);
 
   }
-  
+
   if (C_FC_verin_entre_Obj.pressed())
   {
     analogWrite(V_gabari_PWM, 0);/* Arret du moteur */
@@ -313,9 +313,9 @@ void state1(){
 }
 bool transitionS1S2(){
   
-  // if (button1.released()){
+  //  if (button1.released()){
   //   Serial.println("state0 =>state1");
-  //   return true;
+    return E_C_FC_descenteFil_haut1||E_C_FC_descenteFil_haut2||E_C_pos_grille1;
   // }   
 }
 
