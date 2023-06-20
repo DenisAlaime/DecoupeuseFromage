@@ -16,13 +16,13 @@
 #include "Button.h"
 
 //initialisation des sorties
-const int M_grille = 12; //moteur A
+#define M_grille  12 //moteur A
 const int M_avancer = 2; //moteur X
 const int V_gabari_entre1 = 47; 
 const int V_gabari_entre2 = 48;
 const int V_gabari_PWM = 46;
-const int M_decoupe1 = 3; //moteur Y
-const int M_decoupe2 = 4; //moteur Z
+#define M_decoupe1  3 //moteur Y
+#define M_decoupe2  4 //moteur Z
 const int Led_marche = 38;
 const int Led_erreur = 39;
 
@@ -41,10 +41,10 @@ const int BP_AU = 21; //pin interrupt
 const int C_pos_grille1 = 24; //tranche
 const int C_pos_grille2 = 18; //cube 
 const int C_pos_grille3 = 25; //batonnet
-const int C_FC_verin_entre = 28;
+#define C_FC_verin_entre  28
 const int C_FC_verin_sorti = 26; 
-const int C_FC_descenteFil_haut1 = 16;
-const int C_FC_descenteFil_haut2 = 17; 
+#define C_FC_descenteFil_haut1  16
+#define C_FC_descenteFil_haut2  17
 const int C_FC_deplacementFromage_debut = 14;
 const int C_FC_deplacementFromage_fin = 15;
 const int BP_man = 37; 
@@ -118,7 +118,8 @@ long Valeur_D_M_grille = 1;
 
 const int STATE_DELAY = 10;
 const int LED = 13;
-Button BP_Start(BP_start); // Connect your button between pin 2 and GND
+Button BP_Start_Obj(BP_start); // Connect your button between pin 2 and GND
+Button C_FC_verin_entre_Obj(C_FC_verin_entre);
 
 StateMachine machine = StateMachine();
 void state0();
@@ -224,7 +225,7 @@ void state0(){
 }
 bool transitionS0S1(){
   
-  if (BP_Start.released()){
+  if (BP_Start_Obj.released()){
     Serial.println("state0 =>state1");
     return true;
   }   
@@ -233,7 +234,79 @@ bool transitionS0S1(){
 void state1(){
   //Serial.println("State 0");
   //remonté du vérin
+  if (machine.executeOnce)
+  {
+    digitalWrite(Led_erreur, LOW);
+    digitalWrite(Led_marche,HIGH);
+    
 
+
+        //force l utilisateur a valider son choix au DEBUT du programme UNIQUEMENT (ne sera plus lu après)
+        E_BP_tranche = digitalRead(BP_tranche);
+        E_BP_batonnet = digitalRead(BP_batonnet);
+        E_BP_cube = digitalRead(BP_cube);
+//remontée du vérin
+        digitalWrite(V_gabari_entre1, LOW);
+        digitalWrite(V_gabari_entre2, HIGH);
+        analogWrite(V_gabari_PWM, 255);
+        stepper_M_decoupe1.setSpeedInStepsPerSecond(100);        
+        stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(100);
+        stepper_M_decoupe1.setCurrentPositionInSteps(0);
+        stepper_M_decoupe1.setTargetPositionInSteps(20);
+
+        stepper_M_decoupe2.setSpeedInStepsPerSecond(100);        
+        stepper_M_decoupe2.setAccelerationInStepsPerSecondPerSecond(100);
+        stepper_M_decoupe2.setCurrentPositionInSteps(0);
+        stepper_M_decoupe2.setTargetPositionInSteps(20);
+
+        stepper_M_grille.setSpeedInStepsPerSecond(100);
+        stepper_M_grille.setAccelerationInStepsPerSecondPerSecond(100);
+        stepper_M_grille.setCurrentPositionInSteps(0);
+        stepper_M_grille.setTargetPositionInSteps(20);
+
+  }
+  
+  if (C_FC_verin_entre_Obj.pressed())
+  {
+    analogWrite(V_gabari_PWM, 0);/* Arret du moteur */
+  }
+  
+  if (!stepper_M_decoupe1.motionComplete())
+  {
+    stepper_M_decoupe1.processMovement();
+
+  }
+  
+  stepper_M_decoupe2.processMovement();
+  stepper_M_grille.processMovement();
+  
+  if (digitalRead(C_FC_descenteFil_haut1) == HIGH) 
+    {     
+      
+      stepper_M_decoupe1.setTargetPositionToStop();
+      E_C_FC_descenteFil_haut1=true;
+      
+    }
+
+    if (digitalRead(C_FC_descenteFil_haut2) == HIGH) 
+    {     
+      
+      stepper_M_decoupe2.setTargetPositionToStop();
+      E_C_FC_descenteFil_haut1=true;
+      
+    }
+    if (digitalRead(C_pos_grille1) == HIGH) 
+    {     
+      
+      stepper_M_grille.setTargetPositionToStop();
+      E_C_pos_grille1=true;
+      
+    }
+    
+           
+       // positionInitiale();
+        Serial.println("position initiale atteinte");
+       // Etape = 1;
    // BP_start
 
     
