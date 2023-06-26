@@ -267,6 +267,7 @@ void state1(){
   //remonté du vérin
   if (machine.executeOnce)
   {
+    Serial.println("state1");
     digitalWrite(Led_erreur, LOW);
     digitalWrite(Led_marche,HIGH);
 
@@ -278,17 +279,17 @@ void state1(){
         digitalWrite(V_gabari_entre1, LOW);
         digitalWrite(V_gabari_entre2, HIGH);
         analogWrite(V_gabari_PWM, 255);
-        stepper_M_decoupe1.setSpeedInStepsPerSecond(100);        
+        stepper_M_decoupe1.setSpeedInStepsPerSecond(1000);        
         stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(100);
-        stepper_M_decoupe1.setTargetPositionInSteps(-20);
+        stepper_M_decoupe1.setTargetPositionInSteps(-20000);
 
-        stepper_M_decoupe2.setSpeedInStepsPerSecond(100);        
+        stepper_M_decoupe2.setSpeedInStepsPerSecond(1000);        
         stepper_M_decoupe2.setAccelerationInStepsPerSecondPerSecond(100);
-        stepper_M_decoupe2.setTargetPositionInSteps(-20);
+        stepper_M_decoupe2.setTargetPositionInSteps(-20000);
 
-        stepper_M_grille.setSpeedInStepsPerSecond(100);
+        stepper_M_grille.setSpeedInStepsPerSecond(1000);
         stepper_M_grille.setAccelerationInStepsPerSecondPerSecond(100);
-        stepper_M_grille.setTargetPositionInSteps(-20);
+        stepper_M_grille.setTargetPositionInSteps(20000);
 
   }
 
@@ -297,14 +298,13 @@ void state1(){
     analogWrite(V_gabari_PWM, 0);/* Arret du moteur */
   }
   
-  if (!stepper_M_decoupe1.motionComplete())
-  {
-    stepper_M_decoupe1.processMovement();
+  // if (!stepper_M_decoupe1.motionComplete())
+  // {
+  //   stepper_M_decoupe1.processMovement();
 
-  }
+  // }
   
-  stepper_M_decoupe2.processMovement();
-  stepper_M_grille.processMovement();
+  
   
   if (digitalRead(C_FC_descenteFil_haut1) == HIGH) 
     {     
@@ -312,26 +312,37 @@ void state1(){
       stepper_M_decoupe1.setTargetPositionToStop();
       E_C_FC_descenteFil_haut1=true;
       
+    }else
+    {
+      stepper_M_decoupe1.processMovement();
     }
 
     if (digitalRead(C_FC_descenteFil_haut2) == HIGH) 
     {     
       
       stepper_M_decoupe2.setTargetPositionToStop();
-      E_C_FC_descenteFil_haut1=true;
+      E_C_FC_descenteFil_haut2=true;
       
+    }else
+    {
+      stepper_M_decoupe2.processMovement();
+
     }
+
     if (digitalRead(C_pos_grille1) == HIGH) 
     {     
       
       stepper_M_grille.setTargetPositionToStop();
       E_C_pos_grille1=true;
       
+    }else
+    {
+      stepper_M_grille.processMovement();
     }
     
            
        // positionInitiale();
-        Serial.println("position initiale atteinte");
+        //Serial.println("position initiale atteinte");
        // Etape = 1;
    // BP_start
 
@@ -341,7 +352,15 @@ bool transitionS1S2(){
   
   //  if (button1.released()){
   //   Serial.println("state0 =>state1");
-    return E_C_FC_descenteFil_haut1||E_C_FC_descenteFil_haut2||E_C_pos_grille1;
+    if (E_C_FC_descenteFil_haut1 && E_C_FC_descenteFil_haut2 && E_C_pos_grille1)
+    {
+      Serial.println("state1 =>state2");
+      return true;
+    }
+    
+    
+   // return E_C_FC_descenteFil_haut1 && E_C_FC_descenteFil_haut2 && E_C_pos_grille1;
+
   // }   
 }
 
