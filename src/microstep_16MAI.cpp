@@ -159,9 +159,7 @@ State* S6 = machine.addState(&state6);
 
 
 FlexyStepper stepper_M_decoupe1;
-FlexyStepper stepper_M_decoupe2;
-FlexyStepper stepper_M_avancer;
-FlexyStepper stepper_M_grille;
+
 
 #define homingSpeedInMMPerSec  5
 #define maxHomingDistanceInMM  380   // since my lead-screw is 38cm long, should never move more than that
@@ -216,9 +214,7 @@ Serial.begin(9600);
     digitalWrite(ENABLE, LOW); //Low to enable
 
     stepper_M_decoupe1.connectToPins(M_decoupe1, D_M_decoupe1);
-    stepper_M_decoupe2.connectToPins(M_decoupe2, D_M_decoupe2);
-    stepper_M_avancer.connectToPins(M_avancer, D_M_avancer);
-    stepper_M_grille.connectToPins(M_grille, D_M_grille);
+    
 
     attachInterrupt(digitalPinToInterrupt(BP_AU), arretUrgence, CHANGE);
     attachInterrupt(digitalPinToInterrupt(BP_stop), stop, CHANGE);
@@ -283,13 +279,7 @@ void state1(){
         stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(100);
         stepper_M_decoupe1.setTargetPositionInSteps(-20000);
 
-        stepper_M_decoupe2.setSpeedInStepsPerSecond(1000);        
-        stepper_M_decoupe2.setAccelerationInStepsPerSecondPerSecond(100);
-        stepper_M_decoupe2.setTargetPositionInSteps(-20000);
-
-        stepper_M_grille.setSpeedInStepsPerSecond(1000);
-        stepper_M_grille.setAccelerationInStepsPerSecondPerSecond(100);
-        stepper_M_grille.setTargetPositionInSteps(20000);
+        
 
   }
 
@@ -317,28 +307,7 @@ void state1(){
       stepper_M_decoupe1.processMovement();
     }
 
-    if (digitalRead(C_FC_descenteFil_haut2) == HIGH) 
-    {     
-      
-      stepper_M_decoupe2.setTargetPositionToStop();
-      E_C_FC_descenteFil_haut2=true;
-      
-    }else
-    {
-      stepper_M_decoupe2.processMovement();
-
-    }
-
-    if (digitalRead(C_pos_grille1) == HIGH) 
-    {     
-      
-      stepper_M_grille.setTargetPositionToStop();
-      E_C_pos_grille1=true;
-      
-    }else
-    {
-      stepper_M_grille.processMovement();
-    }
+    
     
            
        // positionInitiale();
@@ -352,7 +321,7 @@ bool transitionS1S2(){
   
   //  if (button1.released()){
   //   Serial.println("state0 =>state1");
-    if (E_C_FC_descenteFil_haut1 && E_C_FC_descenteFil_haut2 && E_C_pos_grille1)
+    if (E_C_FC_descenteFil_haut1 )
     {
       Serial.println("state1 =>state2");
       return true;
@@ -419,18 +388,18 @@ void state2()
 if (machine.executeOnce)  
 {
  Serial.println("State 2");
- stepper_M_avancer.setTargetPositionInSteps(3000) ;
+//  stepper_M_avancer.setTargetPositionInSteps(3000) ;
 }
-stepper_M_avancer.processMovement();
+// stepper_M_avancer.processMovement();
 }
 
 
 bool transitionS2S3(){
   
-  if (stepper_M_avancer.motionComplete())
-  {
-    return true;/* code */
-  }
+  // if (stepper_M_avancer.motionComplete())
+  // {
+  //   return true;/* code */
+  // }
   
   //  if (button1.released()){
   //   Serial.println("state0 =>state1");
@@ -442,19 +411,20 @@ void state3()
 {
 if (machine.executeOnce)  
 {
- stepper_M_avancer.setTargetPositionInSteps(3000) ;// avec fromage 15mm
+ Serial.println("State 2");
+//  stepper_M_avancer.setTargetPositionInSteps(3000) ;// avec fromage 15mm
 }
-stepper_M_avancer.processMovement();
+// stepper_M_avancer.processMovement();
 
 }
 
 
 bool transitionS3S4(){
   
-  if (stepper_M_avancer.motionComplete())
-  {
-    return true;/* code */
-  }
+  // if (stepper_M_avancer.motionComplete())
+  // {
+  //   return true;/* code */
+  // }
   
   //  if (button1.released()){
   //   Serial.println("state0 =>state1");
@@ -464,11 +434,11 @@ bool transitionS3S4(){
 
 void state4()
 {
-if (machine.executeOnce)  
-{
- stepper_M_avancer.setTargetPositionInSteps(3000) ;
-}
-stepper_M_avancer.processMovement();
+// if (machine.executeOnce)  
+// {
+//  stepper_M_avancer.setTargetPositionInSteps(3000) ;
+// }
+// stepper_M_avancer.processMovement();
 
 
 }
@@ -476,10 +446,10 @@ stepper_M_avancer.processMovement();
 
 bool transitionS4S5(){
   
-  if (stepper_M_avancer.motionComplete())
-  {
-    return true;/* code */
-  }
+  // if (stepper_M_avancer.motionComplete())
+  // {
+  //   return true;/* code */
+  // }
   
   //  if (button1.released()){
   //   Serial.println("state0 =>state1");
@@ -492,17 +462,16 @@ void state5()
 if (machine.executeOnce)  
 {
  stepper_M_decoupe1.setTargetPositionInSteps(34800);
- stepper_M_decoupe2.setTargetPositionInSteps(34800);
+ 
 
 }
 stepper_M_decoupe1.processMovement();
-stepper_M_decoupe2.processMovement();
 
 }
 
 bool transitionS5S6(){
   
-  return stepper_M_decoupe1.motionComplete() && stepper_M_decoupe2.motionComplete();
+  return stepper_M_decoupe1.motionComplete() ;
 } 
 
 void state6()//remontée gabari et fil
@@ -510,20 +479,18 @@ void state6()//remontée gabari et fil
 if (machine.executeOnce)  
 {
  stepper_M_decoupe1.setTargetPositionInSteps(10);//remonté fil
- stepper_M_decoupe2.setTargetPositionInSteps(10);
  digitalWrite(V_gabari_entre1, HIGH);// descente du gabarit
  digitalWrite(V_gabari_entre2, LOW);
  analogWrite(V_gabari_PWM, 255);
 
 }
 stepper_M_decoupe1.processMovement();
-stepper_M_decoupe2.processMovement();
 
 }
 
 bool transitionS5S2(){
   
-  return stepper_M_decoupe1.motionComplete() && stepper_M_decoupe2.motionComplete();
+  return stepper_M_decoupe1.motionComplete() ;
 } 
 
 
