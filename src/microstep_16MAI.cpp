@@ -167,6 +167,7 @@ FlexyStepper stepper_M_grille;
 #define maxHomingDistanceInMM  380   // since my lead-screw is 38cm long, should never move more than that
 #define directionTowardHome  -1      // direction to move toward limit switch: 1 goes positive direction, -1 backward
 
+#define directionTowardHome_grille 1
 
 void arretUrgence(); //fonction arret d urgence
 void stop();
@@ -225,6 +226,16 @@ Serial.begin(9600);
     flagArretUrgence = LOW;   //aru désactivé
     flagStop = LOW;           //stop désactivé
     flagPorteOuverte = LOW;   //porte fermée, cad capteur actif
+
+
+    S0->addTransition(&transitionS0S1,S1);
+    S1->addTransition(&transitionS1S2,S2);
+    S2->addTransition(&transitionS2S3,S3);
+  S3->addTransition(&transitionS3S4,S4);
+  S4->addTransition(&transitionS4S5,S5);
+  S5->addTransition(&transitionS5S2,S2);
+  
+  //S5->addTransition(&transitionS6S0,S0);
 }
 
 
@@ -240,6 +251,10 @@ void state0(){
     
 }
 bool transitionS0S1(){
+  // if (digitalRead(BP_start)==0)
+  // {
+  //   Serial.println("state0 =>state1");/* code */
+  // }
   
   if (BP_Start_Obj.released()){
     Serial.println("state0 =>state1");
@@ -247,138 +262,138 @@ bool transitionS0S1(){
   }   
 }
 
-// void state1(){
-//   //Serial.println("State 0");
-//   //remonté du vérin
-//   if (machine.executeOnce)
-//   {
-//     digitalWrite(Led_erreur, LOW);
-//     digitalWrite(Led_marche,HIGH);
-
-//         //force l utilisateur a valider son choix au DEBUT du programme UNIQUEMENT (ne sera plus lu après)
-//         E_BP_tranche = digitalRead(BP_tranche);
-//         E_BP_batonnet = digitalRead(BP_batonnet);
-//         E_BP_cube = digitalRead(BP_cube);
-// //remontée du vérin
-//         digitalWrite(V_gabari_entre1, LOW);
-//         digitalWrite(V_gabari_entre2, HIGH);
-//         analogWrite(V_gabari_PWM, 255);
-//         stepper_M_decoupe1.setSpeedInStepsPerSecond(100);        
-//         stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(100);
-//         stepper_M_decoupe1.setTargetPositionInSteps(-20);
-
-//         stepper_M_decoupe2.setSpeedInStepsPerSecond(100);        
-//         stepper_M_decoupe2.setAccelerationInStepsPerSecondPerSecond(100);
-//         stepper_M_decoupe2.setTargetPositionInSteps(-20);
-
-//         stepper_M_grille.setSpeedInStepsPerSecond(100);
-//         stepper_M_grille.setAccelerationInStepsPerSecondPerSecond(100);
-//         stepper_M_grille.setTargetPositionInSteps(-20);
-
-//   }
-
-//   if (C_FC_verin_entre_Obj.pressed())
-//   {
-//     analogWrite(V_gabari_PWM, 0);/* Arret du moteur */
-//   }
-  
-//   if (!stepper_M_decoupe1.motionComplete())
-//   {
-//     stepper_M_decoupe1.processMovement();
-
-//   }
-  
-//   stepper_M_decoupe2.processMovement();
-//   stepper_M_grille.processMovement();
-  
-//   if (digitalRead(C_FC_descenteFil_haut1) == HIGH) 
-//     {     
-      
-//       stepper_M_decoupe1.setTargetPositionToStop();
-//       E_C_FC_descenteFil_haut1=true;
-      
-//     }
-
-//     if (digitalRead(C_FC_descenteFil_haut2) == HIGH) 
-//     {     
-      
-//       stepper_M_decoupe2.setTargetPositionToStop();
-//       E_C_FC_descenteFil_haut1=true;
-      
-//     }
-//     if (digitalRead(C_pos_grille1) == HIGH) 
-//     {     
-      
-//       stepper_M_grille.setTargetPositionToStop();
-//       E_C_pos_grille1=true;
-      
-//     }
-    
-           
-//        // positionInitiale();
-//         Serial.println("position initiale atteinte");
-//        // Etape = 1;
-//    // BP_start
-
-    
-// }
-// bool transitionS1S2(){
-  
-//   //  if (button1.released()){
-//   //   Serial.println("state0 =>state1");
-//     return E_C_FC_descenteFil_haut1||E_C_FC_descenteFil_haut2||E_C_pos_grille1;
-//   // }   
-// }
-
 void state1(){
-  
+  //Serial.println("State 0");
   //remonté du vérin
   if (machine.executeOnce)
   {
-    Serial.println("State 1");
-    stepper_M_decoupe1.setStepsPerMillimeter(25 * 1);    // 1x microstepping
-    stepper_M_decoupe1.setSpeedInMillimetersPerSecond(10.0);
-    stepper_M_decoupe1.setAccelerationInMillimetersPerSecondPerSecond(10.0); 
-    
-    stepper_M_decoupe2.setStepsPerMillimeter(25 * 1);    // 1x microstepping
-    stepper_M_decoupe2.setSpeedInMillimetersPerSecond(10.0);
-    stepper_M_decoupe2.setAccelerationInMillimetersPerSecondPerSecond(10.0);
+    digitalWrite(Led_erreur, LOW);
+    digitalWrite(Led_marche,HIGH);
 
-    stepper_M_grille.setStepsPerMillimeter(25 * 1);    // 1x microstepping
-    stepper_M_grille.setSpeedInMillimetersPerSecond(10.0);
-    stepper_M_grille.setAccelerationInMillimetersPerSecondPerSecond(10.0);
+        //force l utilisateur a valider son choix au DEBUT du programme UNIQUEMENT (ne sera plus lu après)
+        E_BP_tranche = digitalRead(BP_tranche);
+        E_BP_batonnet = digitalRead(BP_batonnet);
+        E_BP_cube = digitalRead(BP_cube);
+//remontée du vérin
+        digitalWrite(V_gabari_entre1, LOW);
+        digitalWrite(V_gabari_entre2, HIGH);
+        analogWrite(V_gabari_PWM, 255);
+        stepper_M_decoupe1.setSpeedInStepsPerSecond(100);        
+        stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(100);
+        stepper_M_decoupe1.setTargetPositionInSteps(-20);
 
-    stepper_M_decoupe1.moveToHomeInMillimeters(directionTowardHome, homingSpeedInMMPerSec, 
-                                    maxHomingDistanceInMM, C_FC_descenteFil_haut1);
-  stepper_M_decoupe2.moveToHomeInMillimeters(directionTowardHome, homingSpeedInMMPerSec, 
-                                    maxHomingDistanceInMM, C_FC_descenteFil_haut2);
-  stepper_M_grille.moveToHomeInMillimeters(directionTowardHome, homingSpeedInMMPerSec, 
-                                    maxHomingDistanceInMM, C_pos_grille1);
-  //remontée du vérin
-  digitalWrite(V_gabari_entre1, LOW);
-  digitalWrite(V_gabari_entre2, HIGH);
-  analogWrite(V_gabari_PWM, 255);
-  Serial.println("state1()");
+        stepper_M_decoupe2.setSpeedInStepsPerSecond(100);        
+        stepper_M_decoupe2.setAccelerationInStepsPerSecondPerSecond(100);
+        stepper_M_decoupe2.setTargetPositionInSteps(-20);
+
+        stepper_M_grille.setSpeedInStepsPerSecond(100);
+        stepper_M_grille.setAccelerationInStepsPerSecondPerSecond(100);
+        stepper_M_grille.setTargetPositionInSteps(-20);
 
   }
+
   if (C_FC_verin_entre_Obj.pressed())
   {
     analogWrite(V_gabari_PWM, 0);/* Arret du moteur */
-    Serial.println("Gabarit remonté");
   }
   
+  if (!stepper_M_decoupe1.motionComplete())
+  {
+    stepper_M_decoupe1.processMovement();
+
+  }
+  
+  stepper_M_decoupe2.processMovement();
+  stepper_M_grille.processMovement();
+  
+  if (digitalRead(C_FC_descenteFil_haut1) == HIGH) 
+    {     
+      
+      stepper_M_decoupe1.setTargetPositionToStop();
+      E_C_FC_descenteFil_haut1=true;
+      
+    }
+
+    if (digitalRead(C_FC_descenteFil_haut2) == HIGH) 
+    {     
+      
+      stepper_M_decoupe2.setTargetPositionToStop();
+      E_C_FC_descenteFil_haut1=true;
+      
+    }
+    if (digitalRead(C_pos_grille1) == HIGH) 
+    {     
+      
+      stepper_M_grille.setTargetPositionToStop();
+      E_C_pos_grille1=true;
+      
+    }
+    
+           
+       // positionInitiale();
+        Serial.println("position initiale atteinte");
+       // Etape = 1;
+   // BP_start
 
     
 }
 bool transitionS1S2(){
   
-
-   if(BP_Start_Obj.released())    
-   {
-    Serial.println("state1 =>state2");
-    return true;    
-    }   
+  //  if (button1.released()){
+  //   Serial.println("state0 =>state1");
+    return E_C_FC_descenteFil_haut1||E_C_FC_descenteFil_haut2||E_C_pos_grille1;
+  // }   
 }
+
+// void state1(){
+  
+//   //remonté du vérin
+//   if (machine.executeOnce)
+//   {
+//     Serial.println("State 1");
+//     stepper_M_decoupe1.setStepsPerMillimeter(25 * 1);    // 1x microstepping
+//     stepper_M_decoupe1.setSpeedInMillimetersPerSecond(10.0);
+//     stepper_M_decoupe1.setAccelerationInMillimetersPerSecondPerSecond(10.0); 
+    
+//     stepper_M_decoupe2.setStepsPerMillimeter(25 * 1);    // 1x microstepping
+//     stepper_M_decoupe2.setSpeedInMillimetersPerSecond(10.0);
+//     stepper_M_decoupe2.setAccelerationInMillimetersPerSecondPerSecond(10.0);
+
+//     stepper_M_grille.setStepsPerMillimeter(25 * 1);    // 1x microstepping
+//     stepper_M_grille.setSpeedInMillimetersPerSecond(10.0);
+//     stepper_M_grille.setAccelerationInMillimetersPerSecondPerSecond(10.0);
+
+//     stepper_M_decoupe1.moveToHomeInMillimeters(directionTowardHome, homingSpeedInMMPerSec, 
+//                                     maxHomingDistanceInMM, C_FC_descenteFil_haut1);
+//   stepper_M_decoupe2.moveToHomeInMillimeters(directionTowardHome, homingSpeedInMMPerSec, 
+//                                     maxHomingDistanceInMM, C_FC_descenteFil_haut2);
+//   stepper_M_grille.moveToHomeInMillimeters(directionTowardHome, homingSpeedInMMPerSec, 
+//                                     maxHomingDistanceInMM, C_pos_grille1);
+//   //remontée du vérin
+//   digitalWrite(V_gabari_entre1, LOW);
+//   digitalWrite(V_gabari_entre2, HIGH);
+//   analogWrite(V_gabari_PWM, 255);
+//   Serial.println("state1()");
+
+//   }
+//   if (C_FC_verin_entre_Obj.pressed())
+//   {
+//     analogWrite(V_gabari_PWM, 0);/* Arret du moteur */
+//     Serial.println("Gabarit remonté");
+//   }
+  
+
+    
+// }
+// bool transitionS1S2(){
+  
+
+//   if(BP_Start_Obj.released())    
+//    {
+//     Serial.println("state1 =>state2");
+//     return true;    
+//     }   
+// }
 
 void state2()
 {
@@ -495,6 +510,7 @@ bool transitionS5S2(){
 
 
 void loop() {
+machine.run();
 
   //partie calibration
   E_BP_manu_avancer_M_avancer = digitalRead(BP_manu_avancer_M_avancer);
