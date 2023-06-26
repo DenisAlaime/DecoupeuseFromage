@@ -230,8 +230,11 @@ Serial.begin(9600);
 
 //=======================================
 void state0(){
-  //Serial.println("State 0");
+   if (machine.executeOnce)
+  {
+   Serial.println("State 0");
   //remonté du vérin
+  }
     
 
     
@@ -328,10 +331,11 @@ bool transitionS0S1(){
 // }
 
 void state1(){
-  //Serial.println("State 0");
+  
   //remonté du vérin
   if (machine.executeOnce)
   {
+    Serial.println("State 1");
     stepper_M_decoupe1.setStepsPerMillimeter(25 * 1);    // 1x microstepping
     stepper_M_decoupe1.setSpeedInMillimetersPerSecond(10.0);
     stepper_M_decoupe1.setAccelerationInMillimetersPerSecondPerSecond(10.0); 
@@ -380,6 +384,7 @@ void state2()
 {
 if (machine.executeOnce)  
 {
+ Serial.println("State 2");
  stepper_M_avancer.setTargetPositionInSteps(3000) ;
 }
 stepper_M_avancer.processMovement();
