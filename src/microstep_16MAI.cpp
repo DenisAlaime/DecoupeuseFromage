@@ -309,18 +309,34 @@ void state1(){
   if (digitalRead(C_FC_descenteFil_haut1) == HIGH) 
     {     
       
-      stepper_M_decoupe1.setTargetPositionToStop();
+     
+  //    while(!processMovement())
+  // {
+  //   if (digitalRead(homeLimitSwitchPin) == LOW)
+  //   {
+  //     limitSwitchFlag = true;
+  //     directionOfMotion = 0;
+  //     break;
+  //   }
+  // }
+     
+     
+    // Serial.print(digitalRead(C_FC_descenteFil_haut1));
+     // stepper_M_decoupe1.setTargetPositionToStop();
+     stepper_M_decoupe1.setCurrentPositionInSteps(0);
       E_C_FC_descenteFil_haut1=true;
       
     }else
     {
       stepper_M_decoupe1.processMovement();
+      //Serial.print("processMovement()");
     }
 
     if (digitalRead(C_FC_descenteFil_haut2) == HIGH) 
     {     
       
-      stepper_M_decoupe2.setTargetPositionToStop();
+      stepper_M_decoupe2.setCurrentPositionInSteps(0);
+      //stepper_M_decoupe2.setTargetPositionToStop();
       E_C_FC_descenteFil_haut2=true;
       
     }else
@@ -331,8 +347,8 @@ void state1(){
 
     if (digitalRead(C_pos_grille1) == HIGH) 
     {     
-      
-      stepper_M_grille.setTargetPositionToStop();
+      stepper_M_grille.setCurrentPositionInSteps(0);
+      //stepper_M_grille.setTargetPositionToStop();
       E_C_pos_grille1=true;
       
     }else
