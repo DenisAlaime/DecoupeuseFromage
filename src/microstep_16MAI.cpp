@@ -280,15 +280,15 @@ void state1(){
         digitalWrite(V_gabari_entre2, HIGH);
         analogWrite(V_gabari_PWM, 255);
         stepper_M_decoupe1.setSpeedInStepsPerSecond(1000);        
-        stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(100);
+        stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(1000);
         stepper_M_decoupe1.setTargetPositionInSteps(-20000);
 
         stepper_M_decoupe2.setSpeedInStepsPerSecond(1000);        
-        stepper_M_decoupe2.setAccelerationInStepsPerSecondPerSecond(100);
+        stepper_M_decoupe2.setAccelerationInStepsPerSecondPerSecond(1000);
         stepper_M_decoupe2.setTargetPositionInSteps(-20000);
 
-        stepper_M_grille.setSpeedInStepsPerSecond(1000);
-        stepper_M_grille.setAccelerationInStepsPerSecondPerSecond(100);
+        stepper_M_grille.setSpeedInStepsPerSecond(600);
+        stepper_M_grille.setAccelerationInStepsPerSecondPerSecond(500);
         stepper_M_grille.setTargetPositionInSteps(20000);
 
   }
@@ -435,15 +435,23 @@ void state2()
 if (machine.executeOnce)  
 {
  Serial.println("State 2");
- stepper_M_avancer.setTargetPositionInSteps(3000) ;
+
+  stepper_M_decoupe1.setTargetPositionInSteps(5000);
+  stepper_M_decoupe2.setTargetPositionInSteps(5000);
+ //stepper_M_avancer.setTargetPositionInSteps(3000) ;
 }
-stepper_M_avancer.processMovement();
+//stepper_M_avancer.processMovement();
+stepper_M_decoupe1.processMovement();
+stepper_M_decoupe2.processMovement();
+
+
 }
 
 
 bool transitionS2S3(){
   
-  if (stepper_M_avancer.motionComplete())
+  //if (stepper_M_avancer.motionComplete())
+  if (stepper_M_decoupe1.motionComplete() && stepper_M_decoupe2.motionComplete() )
   {
     return true;/* code */
   }
@@ -458,7 +466,15 @@ void state3()
 {
 if (machine.executeOnce)  
 {
+  Serial.println("State 3");
  stepper_M_avancer.setTargetPositionInSteps(3000) ;// avec fromage 15mm
+ while (1)
+ {
+  /* code */
+ }
+ 
+
+
 }
 stepper_M_avancer.processMovement();
 
