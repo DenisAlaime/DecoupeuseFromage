@@ -323,6 +323,8 @@ void state1(){
      
     // Serial.print(digitalRead(C_FC_descenteFil_haut1));
      // stepper_M_decoupe1.setTargetPositionToStop();
+     stepper_M_decoupe1.setTargetPositionInSteps(stepper_M_decoupe1.getCurrentPositionInSteps());
+     stepper_M_decoupe1.processMovement();
      stepper_M_decoupe1.setCurrentPositionInSteps(0);
       E_C_FC_descenteFil_haut1=true;
       
