@@ -211,11 +211,14 @@ Serial.begin(9600);
 void state0(){
    if (machine.executeOnce)
   {
-   Serial.println("State 0");
+   Serial.print("State 0:  ");
+   E_C_FC_descenteFil_haut1=false;
+   Serial.println(E_C_FC_descenteFil_haut1);
+
   //remonté du vérin
   }
     
-
+//Serial.print("State 0 loop:  ");
     
 }
 bool transitionS0S1(){
@@ -236,14 +239,15 @@ void state1(){
   if (machine.executeOnce)
   {
     Serial.println("state1");
+    Serial.println(stepper_M_decoupe1.getCurrentPositionInSteps());
     digitalWrite(Led_erreur, LOW);
     digitalWrite(Led_marche,HIGH);
 
         //force l utilisateur a valider son choix au DEBUT du programme UNIQUEMENT (ne sera plus lu après)
         
 //remontée du vérin
-        stepper_M_decoupe1.setSpeedInStepsPerSecond(1000);        
-        stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(3000);
+        stepper_M_decoupe1.setSpeedInStepsPerSecond(2000);        
+        stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(6000);
         stepper_M_decoupe1.setTargetPositionInSteps(-10000);
 
         
@@ -263,8 +267,14 @@ void state1(){
   if (digitalRead(BP_Up) == HIGH) 
     {     
       
-      stepper_M_decoupe1.setTargetPositionToStop();
+      stepper_M_decoupe1.setTargetPositionInSteps(stepper_M_decoupe1.getCurrentPositionInSteps());
+      stepper_M_decoupe1.processMovement();
+      stepper_M_decoupe1.setCurrentPositionInSteps(0);
+     // stepper_M_decoupe1.processMovement();
+     
       E_C_FC_descenteFil_haut1=true;
+      Serial.print("getCurrentPos: ");
+      Serial.println(stepper_M_decoupe1.getCurrentPositionInSteps());
       
     }else
     {
@@ -368,7 +378,8 @@ bool transitionS2S3(){
   //  if (button1.released()){
   //   Serial.println("state0 =>state1");
     //return E_C_FC_descenteFil_haut1||E_C_FC_descenteFil_haut2||E_C_pos_grille1;
-  // }   
+  // } 
+  return false;  
 }
 
 void state3()
@@ -461,6 +472,14 @@ bool transitionS5S2(){
 
 void loop() {
 machine.run();
+if (BP_OK_Obj.released())
+{
+  Serial.println("State 0");
+  machine.currentState=0;/* code */
+  machine.executeOnce=true;
+}
+
+
 
   //partie calibration
 
