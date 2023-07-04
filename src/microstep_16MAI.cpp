@@ -247,7 +247,7 @@ void state1(){
         
 //remontée du vérin
         stepper_M_decoupe1.setSpeedInStepsPerSecond(2000);        
-        stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(6000);
+        stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(600);
         stepper_M_decoupe1.setTargetPositionInSteps(-10000);
 
         
@@ -267,11 +267,24 @@ void state1(){
   if (digitalRead(BP_Up) == HIGH) 
     {     
       
-      stepper_M_decoupe1.setTargetPositionInSteps(stepper_M_decoupe1.getCurrentPositionInSteps());
-      stepper_M_decoupe1.processMovement();
+      // stepper_M_decoupe1.setTargetPositionInSteps(stepper_M_decoupe1.getCurrentPositionInSteps());
+      // if (stepper_M_decoupe1.processMovement())
+      // {
+      //   Serial.print("processMovement= true ");
+      // }else
+      // {
+      //   Serial.print("processMovement= false ");
+      // }
+      
+      stepper_M_decoupe1.setTargetPositionToStop();
+      while (!stepper_M_decoupe1.motionComplete())
+      {
+        stepper_M_decoupe1.processMovement();
+      }
+      
       stepper_M_decoupe1.setCurrentPositionInSteps(0);
-     // stepper_M_decoupe1.processMovement();
-     
+      //stepper_M_decoupe1.processMovement();
+      //stepper_M_decoupe1.setTargetPositionToStop();
       E_C_FC_descenteFil_haut1=true;
       Serial.print("getCurrentPos: ");
       Serial.println(stepper_M_decoupe1.getCurrentPositionInSteps());
