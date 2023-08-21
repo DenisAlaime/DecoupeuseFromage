@@ -247,7 +247,7 @@ void state1(){
         
 //remontée du vérin
         stepper_M_decoupe1.setSpeedInStepsPerSecond(2000);        
-        stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(600);
+        stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(1000);
         stepper_M_decoupe1.setTargetPositionInSteps(-10000);
 
         
@@ -275,13 +275,16 @@ void state1(){
       // {
       //   Serial.print("processMovement= false ");
       // }
-      
+      stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(100000);
       stepper_M_decoupe1.setTargetPositionToStop();
+      Serial.print("280: ");
       while (!stepper_M_decoupe1.motionComplete())
       {
         stepper_M_decoupe1.processMovement();
       }
       
+      Serial.print("286: ");
+      stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(1000);
       stepper_M_decoupe1.setCurrentPositionInSteps(0);
       //stepper_M_decoupe1.processMovement();
       //stepper_M_decoupe1.setTargetPositionToStop();
@@ -291,7 +294,11 @@ void state1(){
       
     }else
     {
-      stepper_M_decoupe1.processMovement();
+      if (!stepper_M_decoupe1.motionComplete())
+      {
+        stepper_M_decoupe1.processMovement();/* code */
+      }
+       
     }
 
     
