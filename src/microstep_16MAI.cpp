@@ -24,7 +24,7 @@
 #define BP_Down 36
 #define BP_OK 26
 
-
+// Ajout d'une ligne pour test
 
 FlexyStepper stepper_M_decoupe1;
 Button BP_Start_Obj(DETECTEUR_Niveau_1); // Connect your button between pin 2 and GND
