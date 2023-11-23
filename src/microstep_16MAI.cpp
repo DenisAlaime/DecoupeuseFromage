@@ -131,6 +131,7 @@ void state6();
 bool transitionS0S1();
 bool transitionS1S2();
 bool transitionS2S3();
+bool transitionS2S1();
 bool transitionS3S4();
 bool transitionS4S5();
 bool transitionS5S6();
@@ -199,6 +200,7 @@ Serial.begin(9600);
     S0->addTransition(&transitionS0S1,S1);
     S1->addTransition(&transitionS1S2,S2);
     S2->addTransition(&transitionS2S3,S3);
+    S2->addTransition(&transitionS2S1,S1);
   S3->addTransition(&transitionS3S4,S4);
   S4->addTransition(&transitionS4S5,S5);
   S5->addTransition(&transitionS5S2,S2);
@@ -277,13 +279,14 @@ void state1(){
       // }
       stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(100000);
       stepper_M_decoupe1.setTargetPositionToStop();
-      Serial.print("280: ");
+      Serial.print("282: ");
       while (!stepper_M_decoupe1.motionComplete())
       {
         stepper_M_decoupe1.processMovement();
+        Serial.println(stepper_M_decoupe1.getCurrentPositionInSteps());
       }
       
-      Serial.print("286: ");
+      Serial.print("289: ");
       stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(1000);
       stepper_M_decoupe1.setCurrentPositionInSteps(0);
       //stepper_M_decoupe1.processMovement();
@@ -297,6 +300,7 @@ void state1(){
       if (!stepper_M_decoupe1.motionComplete())
       {
         stepper_M_decoupe1.processMovement();/* code */
+       // Serial.print("303: ");
       }
        
     }
@@ -385,6 +389,18 @@ if (machine.executeOnce)
 //  stepper_M_avancer.setTargetPositionInSteps(3000) ;
 }
 // stepper_M_avancer.processMovement();
+}
+
+
+bool transitionS2S1(){
+  
+  if (BP_Start_Obj.released()){
+    Serial.println("state2 =>state1");
+    E_C_FC_descenteFil_haut1=false;
+    return true;
+  } 
+  
+  return false;  
 }
 
 
