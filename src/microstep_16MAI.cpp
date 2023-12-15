@@ -17,14 +17,14 @@
 
 //initialisation des sorties
 #define M_grille  12 //moteur A
-const int M_avancer = 2; //moteur X
-const int V_gabari_entre1 = 47; 
-const int V_gabari_entre2 = 48;
-const int V_gabari_PWM = 46;
+#define M_avancer = 2; //moteur X
+#define V_gabari_entre1 = 47; 
+#define V_gabari_entre2 = 48;
+#define V_gabari_PWM = 46;
 #define M_decoupe1  3 //moteur Y
 #define M_decoupe2  4 //moteur Z
-const int Led_marche = 38;
-const int Led_erreur = 39;
+#define Led_marche = 38;
+#define Led_erreur = 39;
 
 //initialisation des mémoire pour les variables d'états des sorties
 bool E_M_grille;
@@ -37,35 +37,35 @@ bool E_Led_marche;
 bool E_Led_erreur;
 
 //initialisation des entrées  ETAT HAUT (1) = QUAND INACTIF, ETAT BAS(0) QUAND ACTIF
-const int BP_AU = 21; //pin interrupt
+#define BP_AU = 21; //pin interrupt
 #define C_pos_grille1 24 //tranche
-const int C_pos_grille2 = 18; //cube 
-const int C_pos_grille3 = 25; //batonnet
+#define C_pos_grille2 = 18; //cube 
+#define C_pos_grille3 = 25; //batonnet
 #define C_FC_verin_entre  28
-const int C_FC_verin_sorti = 26; 
+#define C_FC_verin_sorti = 26; 
 #define C_FC_descenteFil_haut1  16
 #define C_FC_descenteFil_haut2  17
-const int C_FC_deplacementFromage_debut = 14;
-const int C_FC_deplacementFromage_fin = 15;
-const int BP_man = 37; 
-const int BP_auto = 36; 
-const int BP_tranche = 30; 
-const int BP_cube = 32; 
-const int BP_batonnet = 31; 
+#define C_FC_deplacementFromage_debut = 14;
+#define C_FC_deplacementFromage_fin = 15;
+#define BP_man = 37; 
+#define BP_auto = 36; 
+#define BP_tranche = 30; 
+#define BP_cube = 32; 
+#define BP_batonnet = 31; 
 #define  BP_start  22 
-const int BP_stop = 20; //pin interrup
-const int BP_resetPosition = 23; 
-const int BP_manu_avancer_M_avancer = 40;
-const int BP_manu_reculer_M_avancer = 41;
-const int C_courant = A8; //capteur de courant pour la sur intensité
-const int C_porteOuverte = 19;
+#define BP_stop = 20; //pin interrup
+#define BP_resetPosition = 23; 
+#define BP_manu_avancer_M_avancer = 40;
+#define BP_manu_reculer_M_avancer = 41;
+#define C_courant = A8; //capteur de courant pour la sur intensité
+#define C_porteOuverte = 19;
 
-const int D_M_avancer = 5; //moteur X
-const int D_M_grille = 13; //moteur A
-const int D_M_decoupe1 = 6;//moteur y
-const int D_M_decoupe2 = 7;//moteur Z
+#define D_M_avancer = 5; //moteur X
+#define D_M_grille = 13; //moteur A
+#define D_M_decoupe1 = 6;//moteur y
+#define D_M_decoupe2 = 7;//moteur Z
 
-const int ENABLE = 8;
+#define ENABLE = 8;
 
 //initialisation des mémoire pour les variables d'états des entrées
 bool E_C_pos_grille;
@@ -125,7 +125,7 @@ Button C_FC_verin_entre_Obj(C_FC_verin_entre);
 
 
 StateMachine machine = StateMachine();
-void state0();
+void state0_Homing();
 void state1();//remontée du vérin
 void state2();//avance le fromage de 1,5 cm
 void state3();
