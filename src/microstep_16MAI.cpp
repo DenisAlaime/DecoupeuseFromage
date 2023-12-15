@@ -213,7 +213,7 @@ Serial.begin(9600);
 void state0(){
    if (machine.executeOnce)
   {
-   Serial.print("State 0:  ");
+   Serial.print("State 0: 216 ");
    E_C_FC_descenteFil_haut1=false;
    Serial.println(E_C_FC_descenteFil_haut1);
 
@@ -230,7 +230,7 @@ bool transitionS0S1(){
   // }
   
   if (BP_Start_Obj.released()){
-    Serial.println("state0 =>state1");
+    Serial.println("state0 =>state1  233");
     return true;
   }   
 }
@@ -240,7 +240,8 @@ void state1(){
   //remonté du vérin
   if (machine.executeOnce)
   {
-    Serial.println("state1");
+    Serial.print("state1:243  ");
+   
     Serial.println(stepper_M_decoupe1.getCurrentPositionInSteps());
     digitalWrite(Led_erreur, LOW);
     digitalWrite(Led_marche,HIGH);
@@ -248,9 +249,11 @@ void state1(){
         //force l utilisateur a valider son choix au DEBUT du programme UNIQUEMENT (ne sera plus lu après)
         
 //remontée du vérin
+Serial.println("252: ");
         stepper_M_decoupe1.setSpeedInStepsPerSecond(2000);        
         stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(1000);
-        stepper_M_decoupe1.setTargetPositionInSteps(-10000);
+       // stepper_M_decoupe1.setTargetPositionInSteps(-10000);
+        stepper_M_decoupe1.setTargetPositionRelativeInSteps(-5000);
 
         
 
@@ -264,9 +267,8 @@ void state1(){
 
   // }
   
-  
-  
-  if (digitalRead(BP_Up) == HIGH) 
+    
+  if (BP_Up_Obj.released()) 
     {     
       
       // stepper_M_decoupe1.setTargetPositionInSteps(stepper_M_decoupe1.getCurrentPositionInSteps());
@@ -279,40 +281,32 @@ void state1(){
       // }
       stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(100000);
       stepper_M_decoupe1.setTargetPositionToStop();
-      Serial.print("282: ");
-      while (!stepper_M_decoupe1.motionComplete())
-      {
-        stepper_M_decoupe1.processMovement();
-        Serial.println(stepper_M_decoupe1.getCurrentPositionInSteps());
-      }
+       
+      //  Serial.print("282: ");
       
-      Serial.print("289: ");
-      stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(1000);
-      stepper_M_decoupe1.setCurrentPositionInSteps(0);
-      //stepper_M_decoupe1.processMovement();
-      //stepper_M_decoupe1.setTargetPositionToStop();
-      E_C_FC_descenteFil_haut1=true;
-      Serial.print("getCurrentPos: ");
-      Serial.println(stepper_M_decoupe1.getCurrentPositionInSteps());
       
-    }else
-    {
-      if (!stepper_M_decoupe1.motionComplete())
+      
+      // Serial.print("getCurrentPos: ");
+      // Serial.println(stepper_M_decoupe1.getCurrentPositionInSteps());
+      
+    }
+
+    
+    if (!stepper_M_decoupe1.motionComplete())
       {
         stepper_M_decoupe1.processMovement();/* code */
        // Serial.print("303: ");
       }
-       
-    }
-
-    
-    
            
        // positionInitiale();
         //Serial.println("position initiale atteinte");
        // Etape = 1;
    // BP_start
-
+    if(stepper_M_decoupe1.motionComplete())
+    {
+      E_C_FC_descenteFil_haut1=true;
+     // Serial.print("305: ");
+    }
     
 }
 bool transitionS1S2(){
@@ -321,7 +315,13 @@ bool transitionS1S2(){
   //   Serial.println("state0 =>state1");
     if (E_C_FC_descenteFil_haut1 )
     {
-      Serial.println("state1 =>state2");
+      Serial.println("state1 =>state2 317");
+      Serial.print("CurrentPositionInSteps is: ");
+      Serial.println(stepper_M_decoupe1.getCurrentPositionInSteps());
+      stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(1000);
+      // stepper_M_decoupe1.setCurrentPositionInSteps(0);
+      // Serial.print("And now CurrentPositionInSteps is: ");
+      // Serial.println(stepper_M_decoupe1.getCurrentPositionInSteps());
       return true;
     }
     
@@ -385,7 +385,7 @@ void state2()
 {
 if (machine.executeOnce)  
 {
- Serial.println("State 2");
+ Serial.println("State 2  387");
 //  stepper_M_avancer.setTargetPositionInSteps(3000) ;
 }
 // stepper_M_avancer.processMovement();
@@ -395,7 +395,7 @@ if (machine.executeOnce)
 bool transitionS2S1(){
   
   if (BP_Start_Obj.released()){
-    Serial.println("state2 =>state1");
+    Serial.println("state2 =>state1  397");
     E_C_FC_descenteFil_haut1=false;
     return true;
   } 
@@ -510,7 +510,7 @@ void loop() {
 machine.run();
 if (BP_OK_Obj.released())
 {
-  Serial.println("State 0");
+  Serial.println("State 0 512");
   machine.currentState=0;/* code */
   machine.executeOnce=true;
 }
