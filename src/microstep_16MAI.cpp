@@ -14,19 +14,21 @@
 #include <FlexyStepper.h>
 #include <StateMachine.h>
 #include "Button.h"
+#include <KeyDetector.h>
+#include <L298N.h>
 
-//initialisation des sorties
-#define M_grille  12 //moteur A
-#define M_avancer = 2; //moteur X
-#define V_gabari_entre1 = 47; 
-#define V_gabari_entre2 = 48;
-#define V_gabari_PWM = 46;
-#define M_decoupe1  3 //moteur Y
-#define M_decoupe2  4 //moteur Z
-#define Led_marche = 38;
-#define Led_erreur = 39;
+// Déclaration des sorties
+#define M_grille 12    // moteur A
+#define M_avancer 2 // moteur X
+#define V_gabari_entre1 47
+#define V_gabari_entre2 48
+#define V_gabari_PWM  46
+#define M_decoupe1 3 // moteur Y
+#define M_decoupe2 4 // moteur Z
+#define Led_marche 38
+#define Led_erreur 39
 
-//initialisation des mémoire pour les variables d'états des sorties
+// initialisation des mémoire pour les variables d'états des sorties
 bool E_M_grille;
 bool E_M_avancer;
 bool E_V_gabari_entre;
@@ -36,47 +38,60 @@ bool E_M_decoupe2;
 bool E_Led_marche;
 bool E_Led_erreur;
 
-//initialisation des entrées  ETAT HAUT (1) = QUAND INACTIF, ETAT BAS(0) QUAND ACTIF
-#define BP_AU = 21; //pin interrupt
-#define C_pos_grille1 24 //tranche
-#define C_pos_grille2 = 18; //cube 
-#define C_pos_grille3 = 25; //batonnet
-#define C_FC_verin_entre  28
-#define C_FC_verin_sorti = 26; 
-#define C_FC_descenteFil_haut1  16
-#define C_FC_descenteFil_haut2  17
-#define C_FC_deplacementFromage_debut = 14;
-#define C_FC_deplacementFromage_fin = 15;
-#define BP_man = 37; 
-#define BP_auto = 36; 
-#define BP_tranche = 30; 
-#define BP_cube = 32; 
-#define BP_batonnet = 31; 
-#define  BP_start  22 
-#define BP_stop = 20; //pin interrup
-#define BP_resetPosition = 23; 
-#define BP_manu_avancer_M_avancer = 40;
-#define BP_manu_reculer_M_avancer = 41;
-#define C_courant = A8; //capteur de courant pour la sur intensité
-#define C_porteOuverte = 19;
+// initialisation des entrées  ETAT HAUT (1) = QUAND INACTIF, ETAT BAS(0) QUAND ACTIF
 
-#define D_M_avancer = 5; //moteur X
-#define D_M_grille = 13; //moteur A
-#define D_M_decoupe1 = 6;//moteur y
-#define D_M_decoupe2 = 7;//moteur Z
+#define C_pos_grille1 24 // tranche
+#define C_pos_grille2 18 // cube
+#define C_pos_grille3 25 // batonnet
+#define C_FC_verin_entre 28
+#define C_FC_verin_sorti 26
+#define C_FC_descenteFil_haut1 16
+#define C_FC_descenteFil_haut2 17
+#define C_FC_deplacementFromage_debut 14
+#define C_FC_deplacementFromage_fin 15
 
-#define ENABLE = 8;
+#define KEY_C_pos_grille1 1  // tranche
+#define KEY_CC_pos_grille2 2 // cube
+#define KEY_CC_pos_grille3 3 // batonnet
+#define KEY_CC_FC_verin_entre 4
+#define KEY_CC_FC_verin_sorti 5
+#define KEY_CC_FC_descenteFil_haut1 6
+#define KEY_CC_FC_descenteFil_haut2 7
+#define KEY_CC_FC_deplacementFromage_debut 8
+#define KEY_CC_FC_deplacementFromage_fin 9
 
-//initialisation des mémoire pour les variables d'états des entrées
+#define Int_man 37
+#define Int_auto 36
+#define Int_tranche 30
+#define Int_cube 32
+#define Int_batonnet 31
+
+#define BP_AU 21 // pin interrupt
+#define BP_start 22
+#define BP_stop 20 // pin interrup
+#define BP_resetPosition 23
+#define BP_manu_avancer_M 40
+#define BP_manu_reculer_M 41
+#define C_courant A8 // capteur de courant pour la sur intensité
+#define C_porteOuverte 19
+
+#define D_M_avancer 5  // moteur X
+#define D_M_grille 13  // moteur A
+#define D_M_decoupe1 6 // moteur y
+#define D_M_decoupe2 7 // moteur Z
+
+#define ENABLE 8
+
+// initialisation des mémoire pour les variables d'états des entrées
 bool E_C_pos_grille;
 bool E_BP_AU;
-bool E_C_pos_grille1; //tranche
-bool E_C_pos_grille2; //cube
-bool E_C_pos_grille3; //batonnet
+bool E_C_pos_grille1; // tranche
+bool E_C_pos_grille2; // cube
+bool E_C_pos_grille3; // batonnet
 bool E_C_FC_verin_entre;
 bool E_C_FC_verin_sorti;
 bool E_C_FC_descenteFil_haut1;
-bool E_C_FC_descenteFil_haut2; 
+bool E_C_FC_descenteFil_haut2;
 bool E_C_FC_deplacementFromage_debut;
 bool E_C_FC_deplacementFromage_fin;
 bool E_BP_man;
@@ -92,9 +107,8 @@ bool E_BP_manu_reculer_M_avancer;
 bool E_C_courant;
 bool E_C_porteOuverte;
 
-
-//initialisation des différentes mémoire
-int Etape = 0; //num étape du G7
+// initialisation des différentes mémoire
+int Etape = 0; // num étape du G7
 int NbPas_M_avancer = 0;
 long NbPas_M_decoupe1 = 0;
 int NbPas_M_decoupe2 = 0;
@@ -110,288 +124,349 @@ bool flagStop = LOW;
 bool flagPorteOuverte = LOW;
 bool Verin_OK_temp = LOW;
 
-long Valeur_D_M_decoupe1 = -1; //1 ou -1, il s agit du sens de rotation du moteur pour la fonction d arret jusqu au fin de course
+long Valeur_D_M_decoupe1 = -1; // 1 ou -1, il s agit du sens de rotation du moteur pour la fonction d arret jusqu au fin de course
 long Valeur_D_M_decoupe2 = 1;
 long Valeur_D_M_avancer = 1;
 long Valeur_D_M_grille = 1;
 
-
 const int STATE_DELAY = 10;
 const int LED = 13;
 Button BP_Start_Obj(BP_start); // Connect your button between pin 2 and GND
+Button BP_Reset_Obj(BP_start); //
+Button BP_Stop_Obj(BP_start);  //
+
+Button BP_manu_avancer_M_Obj(BP_manu_avancer_M); //
+Button BP_manu_reculer_M_Obj(BP_manu_reculer_M);  //
+
+Button Int_Manu_Obj(BP_start); //
+Button Int_Auto_Obj(BP_start); //
+
+Button Int_Tranches_Obj(BP_start); //
+Button Int_Batonnets_Obj(BP_start);    //
+Button Int_Cubes_Obj(BP_start);        //
+
+Button C_pos_grille1_Obj(C_pos_grille1);
+Button C_pos_grille2_Obj(C_pos_grille2);
+Button C_pos_grille3_Obj(C_pos_grille3);
+
 Button C_FC_verin_entre_Obj(C_FC_verin_entre);
+Button C_FC_verin_sorti_Obj(C_FC_verin_sorti);
+
+Button C_FC_descenteFil_haut1_Obj(C_FC_descenteFil_haut1);
+Button C_FC_descenteFil_haut2_Obj(C_FC_descenteFil_haut2);
+
+Button C_FC_deplacementFromage_debut_Obj(C_FC_deplacementFromage_debut);
+Button C_FC_deplacementFromage_fin_Obj(C_FC_deplacementFromage_fin);
+
+FlexyStepper stepper_M_decoupe1;
+FlexyStepper stepper_M_decoupe2;
+FlexyStepper stepper_M_Fromage;
+FlexyStepper stepper_M_grille;
+
+L298N GabariMotor(V_gabari_PWM, V_gabari_entre1, V_gabari_entre2);
 
 
 
+
+// #define KEY_C_pos_grille1 1  // tranche
+// #define KEY_CC_pos_grille2 2 // cube
+// #define KEY_CC_pos_grille3 3 // batonnet
+// #define KEY_CC_FC_verin_entre 4
+// #define KEY_CC_FC_verin_sorti 5
+// #define KEY_CC_FC_descenteFil_haut1 6
+// #define KEY_CC_FC_descenteFil_haut2 7
+// #define KEY_CC_FC_deplacementFromage_debut 8
+// #define KEY_CC_FC_deplacementFromage_fin 9
+
+// Key keys[] = {{KEY_C_pos_grille1, C_pos_grille1}, 
+//               {KEY_CC_pos_grille2, C_pos_grille2}, 
+//               {KEY_CC_pos_grille3, C_pos_grille3}, 
+//               {KEY_CC_FC_verin_entre, C_FC_verin_entre}, 
+//               {KEY_CC_FC_verin_sorti, C_FC_verin_sorti}, 
+//               {KEY_CC_FC_descenteFil_haut1, C_FC_descenteFil_haut1}, 
+//               {KEY_CC_FC_descenteFil_haut2, C_FC_descenteFil_haut2}, 
+//               {KEY_CC_FC_deplacementFromage_debut, C_FC_deplacementFromage_debut},
+//               {KEY_CC_FC_deplacementFromage_fin, C_FC_deplacementFromage_fin}};
+
+
+
+// Create KeyDetector object
+KeyDetector FinDeCoursesDetector(keys, sizeof(keys)/sizeof(Key));
 
 StateMachine machine = StateMachine();
-void state0_Homing();
-void state1();//remontée du vérin
-void state2();//avance le fromage de 1,5 cm
-void state3();
-void state4();
-void state5();
-void state6();
+void state0();
+void state1_Homing();   // remontée du vérin
+void state2_ModeManu(); // avance le fromage de 1,5 cm
+void state3_ModeAuto();
+void state4_PositionTranches();
+void state5_PositionCubes();
+void state6_PositionBatonnet();
+void state7_Attente();
+void state8_AvancementFromage();
+void state9_DescendreTranchause();
+void state10_RemontonterTranchauseDescendreGabary();
+void state11_RemontonterGabary();
 
 // void state6();
 bool transitionS0S1();
 bool transitionS1S2();
-bool transitionS2S3();
+bool transitionS1S3();
 bool transitionS3S4();
-bool transitionS4S5();
-bool transitionS5S6();
-bool transitionS5S2();
+bool transitionS3S5();
+bool transitionS3S6();
 
-// bool transitionS5S6();
-// bool transitionS6S0();
+bool transitionS4S7();
+bool transitionS5S7();
+bool transitionS6S7();
+
+bool transitionS7S8();
+bool transitionS8S9();
+bool transitionS9S10();
+bool transitionS10S11();
+
+bool transitionS11S3();
+
+State *S0 = machine.addState(&state0);        //
+State *S1 = machine.addState(&state1_Homing); //
+State *S2 = machine.addState(&state2_ModeManu);
+State *S3 = machine.addState(&state3_ModeAuto);
+State *S4 = machine.addState(&state4_PositionTranches);
+State *S5 = machine.addState(&state5_PositionCubes);
+State *S6 = machine.addState(&state6_PositionBatonnet);
+State *S7 = machine.addState(&state7_Attente); //
+State *S8 = machine.addState(&state8_AvancementFromage);
+State *S9 = machine.addState(&state9_DescendreTranchause);
+State *S10 = machine.addState(&state10_RemontonterTranchauseDescendreGabary);
+State *S11 = machine.addState(&state11_RemontonterGabary);
 
 
-// bool transitionS5S2();
-bool transitionS1S0();
-
-State* S0 = machine.addState(&state0);// mode manuel
-State* S1 = machine.addState(&state1);// début du mode automatique
-State* S2 = machine.addState(&state2);
-State* S3 = machine.addState(&state3);
-State* S4 = machine.addState(&state4);
-State* S5 = machine.addState(&state5);
-State* S6 = machine.addState(&state6);
-
-
-FlexyStepper stepper_M_decoupe1;
-FlexyStepper stepper_M_decoupe2;
-FlexyStepper stepper_M_avancer;
-FlexyStepper stepper_M_grille;
-
-#define homingSpeedInMMPerSec  5
-#define maxHomingDistanceInMM  380   // since my lead-screw is 38cm long, should never move more than that
-#define directionTowardHome  -1      // direction to move toward limit switch: 1 goes positive direction, -1 backward
+#define homingSpeedInMMPerSec 5
+#define maxHomingDistanceInMM 380 // since my lead-screw is 38cm long, should never move more than that
+#define directionTowardHome -1    // direction to move toward limit switch: 1 goes positive direction, -1 backward
 
 #define directionTowardHome_grille 1
 
-void arretUrgence(); //fonction arret d urgence
+void arretUrgence(); // fonction arret d urgence
 void stop();
 void PorteOuverte();
 void positionInitiale();
-void trancheuse();
+bool trancheuse();
+bool DeplacementFromage(bool direction, int16_t vitesse, int16_t acceleration);
 
-void setup() {
-Serial.begin(9600);
+void setup()
+{
+  Serial.begin(9600);
 
-    pinMode(BP_AU, INPUT_PULLUP);
-    pinMode(C_pos_grille1, INPUT_PULLUP);
-    pinMode(C_pos_grille2, INPUT_PULLUP);
-    pinMode(C_pos_grille3, INPUT_PULLUP);
-    pinMode(C_FC_verin_entre, INPUT_PULLUP);
-    pinMode(C_FC_verin_sorti, INPUT_PULLUP);
-    pinMode(C_FC_descenteFil_haut1, INPUT_PULLUP);
-    pinMode(C_FC_descenteFil_haut2, INPUT_PULLUP);
-    pinMode(C_FC_deplacementFromage_debut, INPUT_PULLUP);
-    pinMode(C_FC_deplacementFromage_fin,INPUT_PULLUP);
-    pinMode(BP_man, INPUT_PULLUP);
-    pinMode(BP_auto, INPUT_PULLUP);
-    pinMode(BP_tranche, INPUT_PULLUP);
-    pinMode(BP_cube, INPUT_PULLUP);
-    pinMode(BP_batonnet, INPUT_PULLUP);
-    pinMode(BP_start, INPUT_PULLUP);
-    pinMode(BP_stop, INPUT_PULLUP);
-    pinMode(BP_resetPosition, INPUT_PULLUP);
-    pinMode(BP_manu_avancer_M_avancer, INPUT_PULLUP);
-    pinMode(BP_manu_reculer_M_avancer, INPUT_PULLUP);
-    pinMode(C_porteOuverte, INPUT_PULLUP);
-    pinMode(C_courant, INPUT_PULLUP);
+  pinMode(BP_AU, INPUT_PULLUP);
+  pinMode(C_pos_grille1, INPUT_PULLUP);
+  pinMode(C_pos_grille2, INPUT_PULLUP);
+  pinMode(C_pos_grille3, INPUT_PULLUP);
+  pinMode(C_FC_verin_entre, INPUT_PULLUP);
+  pinMode(C_FC_verin_sorti, INPUT_PULLUP);
+  pinMode(C_FC_descenteFil_haut1, INPUT_PULLUP);
+  pinMode(C_FC_descenteFil_haut2, INPUT_PULLUP);
+  pinMode(C_FC_deplacementFromage_debut, INPUT_PULLUP);
+  pinMode(C_FC_deplacementFromage_fin, INPUT_PULLUP);
+  pinMode(BP_man, INPUT_PULLUP);
+  pinMode(BP_auto, INPUT_PULLUP);
+  pinMode(BP_tranche, INPUT_PULLUP);
+  pinMode(BP_cube, INPUT_PULLUP);
+  pinMode(BP_batonnet, INPUT_PULLUP);
+  pinMode(BP_start, INPUT_PULLUP);
+  pinMode(BP_stop, INPUT_PULLUP);
+  pinMode(BP_resetPosition, INPUT_PULLUP);
+  pinMode(BP_manu_avancer_M_avancer, INPUT_PULLUP);
+  pinMode(BP_manu_reculer_M_avancer, INPUT_PULLUP);
+  pinMode(C_porteOuverte, INPUT_PULLUP);
+  pinMode(C_courant, INPUT_PULLUP);
 
-    //on set les variable comme étant des OutPuts
-    pinMode(M_grille, OUTPUT);
-    pinMode(M_avancer, OUTPUT);
-    pinMode(V_gabari_entre1, OUTPUT);
-    pinMode(V_gabari_entre2, OUTPUT);
-    pinMode(V_gabari_PWM, OUTPUT);
-    //   pinMode(M_decoupe1, OUTPUT);
-    //   pinMode(M_decoupe2, OUTPUT);
-    pinMode(Led_marche, OUTPUT);
-    pinMode(Led_erreur, OUTPUT);
-    pinMode(ENABLE, OUTPUT);
+  // on set les variable comme étant des OutPuts
+  pinMode(M_grille, OUTPUT);
+  pinMode(M_avancer, OUTPUT);
+  pinMode(V_gabari_entre1, OUTPUT);
+  pinMode(V_gabari_entre2, OUTPUT);
+  pinMode(V_gabari_PWM, OUTPUT);
+  //   pinMode(M_decoupe1, OUTPUT);
+  //   pinMode(M_decoupe2, OUTPUT);
+  pinMode(Led_marche, OUTPUT);
+  pinMode(Led_erreur, OUTPUT);
+  pinMode(ENABLE, OUTPUT);
 
-    digitalWrite(ENABLE, LOW); //Low to enable
+  digitalWrite(ENABLE, LOW); // Low to enable
 
-    stepper_M_decoupe1.connectToPins(M_decoupe1, D_M_decoupe1);
-    stepper_M_decoupe2.connectToPins(M_decoupe2, D_M_decoupe2);
-    stepper_M_avancer.connectToPins(M_avancer, D_M_avancer);
-    stepper_M_grille.connectToPins(M_grille, D_M_grille);
+  stepper_M_decoupe1.connectToPins(M_decoupe1, D_M_decoupe1);
+  stepper_M_decoupe2.connectToPins(M_decoupe2, D_M_decoupe2);
+  stepper_M_avancer.connectToPins(M_avancer, D_M_avancer);
+  stepper_M_grille.connectToPins(M_grille, D_M_grille);
 
-    attachInterrupt(digitalPinToInterrupt(BP_AU), arretUrgence, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(BP_stop), stop, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(C_porteOuverte), PorteOuverte, FALLING);
-    flagArretUrgence = LOW;   //aru désactivé
-    flagStop = LOW;           //stop désactivé
-    flagPorteOuverte = LOW;   //porte fermée, cad capteur actif
+  attachInterrupt(digitalPinToInterrupt(BP_AU), arretUrgence, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(BP_stop), stop, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(C_porteOuverte), PorteOuverte, FALLING);
+  flagArretUrgence = LOW; // aru désactivé
+  flagStop = LOW;         // stop désactivé
+  flagPorteOuverte = LOW; // porte fermée, cad capteur actif
 
+  S0->addTransition(&transitionS0S1, S1);
+  S1->addTransition(&transitionS1S2, S2);
+  S2->addTransition(&transitionS2S3, S3);
+  S3->addTransition(&transitionS3S4, S4);
+  S4->addTransition(&transitionS4S5, S5);
+  S5->addTransition(&transitionS5S2, S2);
 
-    S0->addTransition(&transitionS0S1,S1);
-    S1->addTransition(&transitionS1S2,S2);
-    S2->addTransition(&transitionS2S3,S3);
-  S3->addTransition(&transitionS3S4,S4);
-  S4->addTransition(&transitionS4S5,S5);
-  S5->addTransition(&transitionS5S2,S2);
-  
-  //S5->addTransition(&transitionS6S0,S0);
+  // S5->addTransition(&transitionS6S0,S0);
 }
-
 
 //=======================================
-void state0(){
-   if (machine.executeOnce)
+void state0()
+{
+  if (machine.executeOnce)
   {
-   Serial.println("State 0");
-  //remonté du vérin
+    Serial.println("State 0, Attente du Reset");
+    // remonté du vérin
   }
-    
 
-    
 }
-bool transitionS0S1(){
+bool transitionS0S1()
+{
   // if (digitalRead(BP_start)==0)
   // {
   //   Serial.println("state0 =>state1");/* code */
   // }
-  
-  if (BP_Start_Obj.released()){
+
+  if (BP_Reset_Obj.released())
+  {
     Serial.println("state0 =>state1");
     return true;
-  }   
+  }
 }
 
-void state1(){
-  //Serial.println("State 0");
-  //remonté du vérin
+void state1()
+{
+  // Serial.println("State 0");
+  // remonté du vérin
   if (machine.executeOnce)
   {
     Serial.println("state1");
     digitalWrite(Led_erreur, LOW);
-    digitalWrite(Led_marche,HIGH);
+    digitalWrite(Led_marche, HIGH);
 
-        //force l utilisateur a valider son choix au DEBUT du programme UNIQUEMENT (ne sera plus lu après)
-        E_BP_tranche = digitalRead(BP_tranche);
-        E_BP_batonnet = digitalRead(BP_batonnet);
-        E_BP_cube = digitalRead(BP_cube);
-//remontée du vérin
-        digitalWrite(V_gabari_entre1, LOW);
-        digitalWrite(V_gabari_entre2, HIGH);
-        analogWrite(V_gabari_PWM, 255);
-        stepper_M_decoupe1.setSpeedInStepsPerSecond(1000);        
-        stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(1000);
-        stepper_M_decoupe1.setTargetPositionInSteps(-20000);
+    // force l utilisateur a valider son choix au DEBUT du programme UNIQUEMENT (ne sera plus lu après)
+    // E_BP_tranche = digitalRead(BP_tranche);
+    // E_BP_batonnet = digitalRead(BP_batonnet);
+    // E_BP_cube = digitalRead(BP_cube);
+    // remontée du vérin
+    GabariMotor.setSpeed(255);
+    GabariMotor.backward();
+    
+    stepper_M_decoupe1.setSpeedInStepsPerSecond(1000);
+    stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(1000);
+    stepper_M_decoupe1.setTargetPositionInSteps(-20000);
 
-        stepper_M_decoupe2.setSpeedInStepsPerSecond(1000);        
-        stepper_M_decoupe2.setAccelerationInStepsPerSecondPerSecond(1000);
-        stepper_M_decoupe2.setTargetPositionInSteps(-20000);
+    stepper_M_decoupe2.setSpeedInStepsPerSecond(1000);
+    stepper_M_decoupe2.setAccelerationInStepsPerSecondPerSecond(1000);
+    stepper_M_decoupe2.setTargetPositionInSteps(-20000);
 
-        stepper_M_grille.setSpeedInStepsPerSecond(600);
-        stepper_M_grille.setAccelerationInStepsPerSecondPerSecond(500);
-        stepper_M_grille.setTargetPositionInSteps(20000);
-
+    stepper_M_grille.setSpeedInStepsPerSecond(600);
+    stepper_M_grille.setAccelerationInStepsPerSecondPerSecond(500);
+    stepper_M_grille.setTargetPositionInSteps(20000);
+    
+    stepper_M_Fromage.setSpeedInStepsPerSecond(600);
+    stepper_M_Fromage.setAccelerationInStepsPerSecondPerSecond(500);
+    stepper_M_Fromage.setTargetPositionInSteps(20000);
   }
 
   if (C_FC_verin_entre_Obj.pressed())
   {
-    analogWrite(V_gabari_PWM, 0);/* Arret du moteur */
+    GabariMotor.stop();
+    
   }
-  
+
   // if (!stepper_M_decoupe1.motionComplete())
   // {
   //   stepper_M_decoupe1.processMovement();
 
   // }
-  
-  
-  
-  if (digitalRead(C_FC_descenteFil_haut1) == HIGH) 
-    {     
-      
-     
-  //    while(!processMovement())
-  // {
-  //   if (digitalRead(homeLimitSwitchPin) == LOW)
-  //   {
-  //     limitSwitchFlag = true;
-  //     directionOfMotion = 0;
-  //     break;
-  //   }
-  // }
-     
-     
+
+  if (digitalRead(C_FC_descenteFil_haut1) == HIGH)
+  {
+
+    //    while(!processMovement())
+    // {
+    //   if (digitalRead(homeLimitSwitchPin) == LOW)
+    //   {
+    //     limitSwitchFlag = true;
+    //     directionOfMotion = 0;
+    //     break;
+    //   }
+    // }
+
     // Serial.print(digitalRead(C_FC_descenteFil_haut1));
-     // stepper_M_decoupe1.setTargetPositionToStop();
-     stepper_M_decoupe1.setTargetPositionInSteps(stepper_M_decoupe1.getCurrentPositionInSteps());
-     stepper_M_decoupe1.processMovement();
-     stepper_M_decoupe1.setCurrentPositionInSteps(0);
-      E_C_FC_descenteFil_haut1=true;
-      
-    }else
-    {
-      stepper_M_decoupe1.processMovement();
-      //Serial.print("processMovement()");
-    }
+    // stepper_M_decoupe1.setTargetPositionToStop();
+    stepper_M_decoupe1.setTargetPositionInSteps(stepper_M_decoupe1.getCurrentPositionInSteps());
+    stepper_M_decoupe1.processMovement();
+    stepper_M_decoupe1.setCurrentPositionInSteps(0);
+    E_C_FC_descenteFil_haut1 = true;
+  }
+  else
+  {
+    stepper_M_decoupe1.processMovement();
+    // Serial.print("processMovement()");
+  }
 
-    if (digitalRead(C_FC_descenteFil_haut2) == HIGH) 
-    {     
-      
-      stepper_M_decoupe2.setCurrentPositionInSteps(0);
-      //stepper_M_decoupe2.setTargetPositionToStop();
-      E_C_FC_descenteFil_haut2=true;
-      
-    }else
-    {
-      stepper_M_decoupe2.processMovement();
+  if (digitalRead(C_FC_descenteFil_haut2) == HIGH)
+  {
 
-    }
+    stepper_M_decoupe2.setCurrentPositionInSteps(0);
+    // stepper_M_decoupe2.setTargetPositionToStop();
+    E_C_FC_descenteFil_haut2 = true;
+  }
+  else
+  {
+    stepper_M_decoupe2.processMovement();
+  }
 
-    if (digitalRead(C_pos_grille1) == HIGH) 
-    {     
-      stepper_M_grille.setCurrentPositionInSteps(0);
-      //stepper_M_grille.setTargetPositionToStop();
-      E_C_pos_grille1=true;
-      
-    }else
-    {
-      stepper_M_grille.processMovement();
-    }
-    
-           
-       // positionInitiale();
-        //Serial.println("position initiale atteinte");
-       // Etape = 1;
-   // BP_start
+  if (digitalRead(C_pos_grille1) == HIGH)
+  {
+    stepper_M_grille.setCurrentPositionInSteps(0);
+    // stepper_M_grille.setTargetPositionToStop();
+    E_C_pos_grille1 = true;
+  }
+  else
+  {
+    stepper_M_grille.processMovement();
+  }
 
-    
+  // positionInitiale();
+  // Serial.println("position initiale atteinte");
+  // Etape = 1;
+  // BP_start
 }
-bool transitionS1S2(){
-  
+bool transitionS1S2()
+{
+
   //  if (button1.released()){
   //   Serial.println("state0 =>state1");
-    if (E_C_FC_descenteFil_haut1 && E_C_FC_descenteFil_haut2 && E_C_pos_grille1)
-    {
-      Serial.println("state1 =>state2");
-      return true;
-    }
-    
-    
-   // return E_C_FC_descenteFil_haut1 && E_C_FC_descenteFil_haut2 && E_C_pos_grille1;
+  if (E_C_FC_descenteFil_haut1 && E_C_FC_descenteFil_haut2 && E_C_pos_grille1)
+  {
+    Serial.println("state1 =>state2");
+    return true;
+  }
 
-  // }   
+  // return E_C_FC_descenteFil_haut1 && E_C_FC_descenteFil_haut2 && E_C_pos_grille1;
+
+  // }
 }
 
 // void state1(){
-  
+
 //   //remonté du vérin
 //   if (machine.executeOnce)
 //   {
 //     Serial.println("State 1");
 //     stepper_M_decoupe1.setStepsPerMillimeter(25 * 1);    // 1x microstepping
 //     stepper_M_decoupe1.setSpeedInMillimetersPerSecond(10.0);
-//     stepper_M_decoupe1.setAccelerationInMillimetersPerSecondPerSecond(10.0); 
-    
+//     stepper_M_decoupe1.setAccelerationInMillimetersPerSecondPerSecond(10.0);
+
 //     stepper_M_decoupe2.setStepsPerMillimeter(25 * 1);    // 1x microstepping
 //     stepper_M_decoupe2.setSpeedInMillimetersPerSecond(10.0);
 //     stepper_M_decoupe2.setAccelerationInMillimetersPerSecondPerSecond(10.0);
@@ -400,11 +475,11 @@ bool transitionS1S2(){
 //     stepper_M_grille.setSpeedInMillimetersPerSecond(10.0);
 //     stepper_M_grille.setAccelerationInMillimetersPerSecondPerSecond(10.0);
 
-//     stepper_M_decoupe1.moveToHomeInMillimeters(directionTowardHome, homingSpeedInMMPerSec, 
+//     stepper_M_decoupe1.moveToHomeInMillimeters(directionTowardHome, homingSpeedInMMPerSec,
 //                                     maxHomingDistanceInMM, C_FC_descenteFil_haut1);
-//   stepper_M_decoupe2.moveToHomeInMillimeters(directionTowardHome, homingSpeedInMMPerSec, 
+//   stepper_M_decoupe2.moveToHomeInMillimeters(directionTowardHome, homingSpeedInMMPerSec,
 //                                     maxHomingDistanceInMM, C_FC_descenteFil_haut2);
-//   stepper_M_grille.moveToHomeInMillimeters(directionTowardHome, homingSpeedInMMPerSec, 
+//   stepper_M_grille.moveToHomeInMillimeters(directionTowardHome, homingSpeedInMMPerSec,
 //                                     maxHomingDistanceInMM, C_pos_grille1);
 //   //remontée du vérin
 //   digitalWrite(V_gabari_entre1, LOW);
@@ -418,475 +493,457 @@ bool transitionS1S2(){
 //     analogWrite(V_gabari_PWM, 0);/* Arret du moteur */
 //     Serial.println("Gabarit remonté");
 //   }
-  
 
-    
 // }
 // bool transitionS1S2(){
-  
 
-//   if(BP_Start_Obj.released())    
+//   if(BP_Start_Obj.released())
 //    {
 //     Serial.println("state1 =>state2");
-//     return true;    
-//     }   
+//     return true;
+//     }
 // }
 
 void state2()
 {
-if (machine.executeOnce)  
-{
- Serial.println("State 2");
-
-  stepper_M_decoupe1.setTargetPositionInSteps(5000);
-  stepper_M_decoupe2.setTargetPositionInSteps(5000);
- //stepper_M_avancer.setTargetPositionInSteps(3000) ;
-}
-//stepper_M_avancer.processMovement();
-stepper_M_decoupe1.processMovement();
-stepper_M_decoupe2.processMovement();
-
-
-}
-
-
-bool transitionS2S3(){
-  
-  //if (stepper_M_avancer.motionComplete())
-  if (stepper_M_decoupe1.motionComplete() && stepper_M_decoupe2.motionComplete() )
+  if (machine.executeOnce)
   {
-    return true;/* code */
+    Serial.println("State 2");
+
+    stepper_M_decoupe1.setTargetPositionInSteps(5000);
+    stepper_M_decoupe2.setTargetPositionInSteps(5000);
+    // stepper_M_avancer.setTargetPositionInSteps(3000) ;
   }
-  
+  // stepper_M_avancer.processMovement();
+  stepper_M_decoupe1.processMovement();
+  stepper_M_decoupe2.processMovement();
+}
+
+bool transitionS2S3()
+{
+
+  // if (stepper_M_avancer.motionComplete())
+  if (stepper_M_decoupe1.motionComplete() && stepper_M_decoupe2.motionComplete())
+  {
+    return true; /* code */
+  }
+
   //  if (button1.released()){
   //   Serial.println("state0 =>state1");
-    //return E_C_FC_descenteFil_haut1||E_C_FC_descenteFil_haut2||E_C_pos_grille1;
-  // }   
+  // return E_C_FC_descenteFil_haut1||E_C_FC_descenteFil_haut2||E_C_pos_grille1;
+  // }
 }
 
 void state3()
 {
-if (machine.executeOnce)  
+  if (machine.executeOnce)
+  {
+    Serial.println("State 3");
+    stepper_M_avancer.setTargetPositionInSteps(3000); // avec fromage 15mm
+    while (1)
+    {
+      /* code */
+    }
+  }
+  stepper_M_avancer.processMovement();
+}
+
+bool transitionS3S4()
 {
-  Serial.println("State 3");
- stepper_M_avancer.setTargetPositionInSteps(3000) ;// avec fromage 15mm
- while (1)
- {
-  /* code */
- }
- 
 
-
-}
-stepper_M_avancer.processMovement();
-
-}
-
-
-bool transitionS3S4(){
-  
   if (stepper_M_avancer.motionComplete())
   {
-    return true;/* code */
+    return true; /* code */
   }
-  
+
   //  if (button1.released()){
   //   Serial.println("state0 =>state1");
-    //return E_C_FC_descenteFil_haut1||E_C_FC_descenteFil_haut2||E_C_pos_grille1;
-  // }   
+  // return E_C_FC_descenteFil_haut1||E_C_FC_descenteFil_haut2||E_C_pos_grille1;
+  // }
 }
 
 void state4()
 {
-if (machine.executeOnce)  
+  if (machine.executeOnce)
+  {
+    stepper_M_avancer.setTargetPositionInSteps(3000);
+  }
+  stepper_M_avancer.processMovement();
+}
+
+bool transitionS4S5()
 {
- stepper_M_avancer.setTargetPositionInSteps(3000) ;
-}
-stepper_M_avancer.processMovement();
 
-
-}
-
-
-bool transitionS4S5(){
-  
   if (stepper_M_avancer.motionComplete())
   {
-    return true;/* code */
+    return true; /* code */
   }
-  
+
   //  if (button1.released()){
   //   Serial.println("state0 =>state1");
-    //return E_C_FC_descenteFil_haut1||E_C_FC_descenteFil_haut2||E_C_pos_grille1;
-  // }   
+  // return E_C_FC_descenteFil_haut1||E_C_FC_descenteFil_haut2||E_C_pos_grille1;
+  // }
 }
 
 void state5()
 {
-if (machine.executeOnce)  
+  if (machine.executeOnce)
+  {
+    stepper_M_decoupe1.setTargetPositionInSteps(34800);
+    stepper_M_decoupe2.setTargetPositionInSteps(34800);
+  }
+  stepper_M_decoupe1.processMovement();
+  stepper_M_decoupe2.processMovement();
+}
+
+bool transitionS5S6()
 {
- stepper_M_decoupe1.setTargetPositionInSteps(34800);
- stepper_M_decoupe2.setTargetPositionInSteps(34800);
 
-}
-stepper_M_decoupe1.processMovement();
-stepper_M_decoupe2.processMovement();
-
-}
-
-bool transitionS5S6(){
-  
   return stepper_M_decoupe1.motionComplete() && stepper_M_decoupe2.motionComplete();
-} 
-
-void state6()//remontée gabari et fil
-{
-if (machine.executeOnce)  
-{
- stepper_M_decoupe1.setTargetPositionInSteps(10);//remonté fil
- stepper_M_decoupe2.setTargetPositionInSteps(10);
- digitalWrite(V_gabari_entre1, HIGH);// descente du gabarit
- digitalWrite(V_gabari_entre2, LOW);
- analogWrite(V_gabari_PWM, 255);
-
-}
-stepper_M_decoupe1.processMovement();
-stepper_M_decoupe2.processMovement();
-
 }
 
-bool transitionS5S2(){
-  
+void state6() // remontée gabari et fil
+{
+  if (machine.executeOnce)
+  {
+    stepper_M_decoupe1.setTargetPositionInSteps(10); // remonté fil
+    stepper_M_decoupe2.setTargetPositionInSteps(10);
+    digitalWrite(V_gabari_entre1, HIGH); // descente du gabarit
+    digitalWrite(V_gabari_entre2, LOW);
+    analogWrite(V_gabari_PWM, 255);
+  }
+  stepper_M_decoupe1.processMovement();
+  stepper_M_decoupe2.processMovement();
+}
+
+bool transitionS5S2()
+{
+
   return stepper_M_decoupe1.motionComplete() && stepper_M_decoupe2.motionComplete();
-} 
+}
 
+void loop()
+{
+  machine.run();
 
-
-void loop() {
-machine.run();
-
-  //partie calibration
+  // partie calibration
   E_BP_manu_avancer_M_avancer = digitalRead(BP_manu_avancer_M_avancer);
   E_BP_manu_reculer_M_avancer = digitalRead(BP_manu_reculer_M_avancer);
 
-  //mode manu
-  while(digitalRead(BP_man) == 0 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW) //read bp man est il utile?
+  // mode manu
+  while (digitalRead(BP_man) == 0 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW) // read bp man est il utile?
   {
-      while(digitalRead(BP_manu_reculer_M_avancer) == LOW && digitalRead(C_FC_deplacementFromage_debut) == 0)
+    while (digitalRead(BP_manu_reculer_M_avancer) == LOW && digitalRead(C_FC_deplacementFromage_debut) == 0)
+    {
       {
-        {
-          digitalWrite(D_M_avancer, HIGH);
-          digitalWrite(M_avancer, HIGH);
-          delay(1); // microstepping activé
-          digitalWrite(M_avancer, LOW);
-          delay(1); 
-        }
+        digitalWrite(D_M_avancer, HIGH);
+        digitalWrite(M_avancer, HIGH);
+        delay(1); // microstepping activé
+        digitalWrite(M_avancer, LOW);
+        delay(1);
       }
-      while(digitalRead(BP_manu_avancer_M_avancer) == LOW && digitalRead(C_FC_deplacementFromage_fin) == 0)
+    }
+    while (digitalRead(BP_manu_avancer_M_avancer) == LOW && digitalRead(C_FC_deplacementFromage_fin) == 0)
+    {
       {
-        {
-          digitalWrite(D_M_avancer, LOW);
-          digitalWrite(M_avancer, HIGH);
-          delay(1);
-          digitalWrite(M_avancer, LOW);
-          delay(1); 
-        }
+        digitalWrite(D_M_avancer, LOW);
+        digitalWrite(M_avancer, HIGH);
+        delay(1);
+        digitalWrite(M_avancer, LOW);
+        delay(1);
       }
+    }
   }
-  
-//   //mode auto
-//   while(flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW && flagPorteOuverte == LOW && digitalRead(BP_auto) == 0)
-//   {
-//     //mise en marche et remise en CI
-//     if(Etape == 0 && digitalRead(BP_auto)== 0 && digitalRead(BP_start)== 0) //remise en CI
-//     {
-//         Serial.print("Num etape: ");
-//         Serial.println(Etape);
 
-//         digitalWrite(Led_erreur, LOW);
-//         digitalWrite(Led_marche,HIGH);
+  //   //mode auto
+  //   while(flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW && flagPorteOuverte == LOW && digitalRead(BP_auto) == 0)
+  //   {
+  //     //mise en marche et remise en CI
+  //     if(Etape == 0 && digitalRead(BP_auto)== 0 && digitalRead(BP_start)== 0) //remise en CI
+  //     {
+  //         Serial.print("Num etape: ");
+  //         Serial.println(Etape);
 
-//         //force l utilisateur a valider son choix au DEBUT du programme UNIQUEMENT (ne sera plus lu après)
-//         E_BP_tranche = digitalRead(BP_tranche);
-//         E_BP_batonnet = digitalRead(BP_batonnet);
-//         E_BP_cube = digitalRead(BP_cube);
-    
-//         positionInitiale();
-//         Serial.println("position initiale atteinte");
-//         Etape = 1;
-//     }
+  //         digitalWrite(Led_erreur, LOW);
+  //         digitalWrite(Led_marche,HIGH);
 
-//     E_C_FC_descenteFil_haut1 = digitalRead(C_FC_descenteFil_haut1);
-//     E_C_FC_descenteFil_haut2 = digitalRead(C_FC_descenteFil_haut2);
-//     E_C_FC_verin_entre = digitalRead(C_FC_verin_entre);
-//     E_BP_start = digitalRead(BP_start);
-//     E_BP_auto = digitalRead(BP_auto);
+  //         //force l utilisateur a valider son choix au DEBUT du programme UNIQUEMENT (ne sera plus lu après)
+  //         E_BP_tranche = digitalRead(BP_tranche);
+  //         E_BP_batonnet = digitalRead(BP_batonnet);
+  //         E_BP_cube = digitalRead(BP_cube);
 
-//     //avance le fromage de 1,5 cm
-//     if(Etape == 1 && E_C_FC_descenteFil_haut1 == 1 && E_C_FC_descenteFil_haut2 == 1 && E_C_FC_verin_entre == 1 && E_BP_auto == 0)
-//     {
-//         Serial.print("Num etape: ");
-//         Serial.println(Etape);
-      
-//       //remettre a 3000
-//       while(NbPas_M_avancer < 3000 && digitalRead(C_FC_deplacementFromage_fin) == 0 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW) //200*7,5 note: il saute des pas, on est a 1,35 cm et pas 1,5
-//       {
-//         digitalWrite(D_M_avancer, LOW); //avance
-//         digitalWrite(M_avancer, HIGH);
-//         delay(1);
-//         digitalWrite(M_avancer, LOW);
-//         delay(1); 
-//         NbPas_M_avancer++;
-//       }
-//       Etape = 2;
-//     }
+  //         positionInitiale();
+  //         Serial.println("position initiale atteinte");
+  //         Etape = 1;
+  //     }
 
-//     E_C_pos_grille1 = digitalRead(C_pos_grille1);
-//     E_C_pos_grille2 = digitalRead(C_pos_grille2);
-//     E_C_pos_grille3 = digitalRead(C_pos_grille3);
-    
-//     // déplacement grille par rapport au choix
-//     if(Etape == 2 && E_BP_tranche == 0 && digitalRead(C_pos_grille1) == 1) //tranche
-//     {
-//       Serial.print("Num etape: ");
-//       Serial.println(Etape);
+  //     E_C_FC_descenteFil_haut1 = digitalRead(C_FC_descenteFil_haut1);
+  //     E_C_FC_descenteFil_haut2 = digitalRead(C_FC_descenteFil_haut2);
+  //     E_C_FC_verin_entre = digitalRead(C_FC_verin_entre);
+  //     E_BP_start = digitalRead(BP_start);
+  //     E_BP_auto = digitalRead(BP_auto);
 
-//       trancheuse();
+  //     //avance le fromage de 1,5 cm
+  //     if(Etape == 1 && E_C_FC_descenteFil_haut1 == 1 && E_C_FC_descenteFil_haut2 == 1 && E_C_FC_verin_entre == 1 && E_BP_auto == 0)
+  //     {
+  //         Serial.print("Num etape: ");
+  //         Serial.println(Etape);
 
-//       Etape = 3;
-//     }
-//     if(Etape == 2 && E_BP_cube == 0 && digitalRead(C_pos_grille1) == 1) //cube
-//     {
-//       Serial.print("Num etape: ");
-//       Serial.println(Etape);
-      
-//       while(digitalRead(C_pos_grille2) == 0 && flagArretUrgence == LOW && flagStop == LOW)
-//       {
-//         digitalWrite(D_M_grille, HIGH); //avance vers l opposé du coffret electrique
-//         digitalWrite(M_grille, HIGH);
-//         delay(1);
-//         digitalWrite(M_grille, LOW);
-//         delay(1); 
-//       }
+  //       //remettre a 3000
+  //       while(NbPas_M_avancer < 3000 && digitalRead(C_FC_deplacementFromage_fin) == 0 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW) //200*7,5 note: il saute des pas, on est a 1,35 cm et pas 1,5
+  //       {
+  //         digitalWrite(D_M_avancer, LOW); //avance
+  //         digitalWrite(M_avancer, HIGH);
+  //         delay(1);
+  //         digitalWrite(M_avancer, LOW);
+  //         delay(1);
+  //         NbPas_M_avancer++;
+  //       }
+  //       Etape = 2;
+  //     }
 
-//       trancheuse();
-//       Etape = 4;
-//     }
-//     if(Etape == 2 && E_BP_batonnet == 0 && digitalRead(C_pos_grille1) == 1) //batonnet
-//     {
-//       Serial.print("Num etape: ");
-//       Serial.println(Etape);
-//       while(digitalRead(C_pos_grille3) == 0 && flagArretUrgence == LOW && flagStop == LOW)
-//       {
+  //     E_C_pos_grille1 = digitalRead(C_pos_grille1);
+  //     E_C_pos_grille2 = digitalRead(C_pos_grille2);
+  //     E_C_pos_grille3 = digitalRead(C_pos_grille3);
 
-//         digitalWrite(D_M_grille, HIGH); //avance vers l opposé du coffret electrique
-//         digitalWrite(M_grille, HIGH);
-//         delay(1);
-//         digitalWrite(M_grille, LOW);
-//         delay(1);
-//       } 
+  //     // déplacement grille par rapport au choix
+  //     if(Etape == 2 && E_BP_tranche == 0 && digitalRead(C_pos_grille1) == 1) //tranche
+  //     {
+  //       Serial.print("Num etape: ");
+  //       Serial.println(Etape);
 
-//     trancheuse();
-//     Etape = 5;
-//     }
+  //       trancheuse();
 
-  
-//     //alignement de la grille avec le gabari en mode cube
-//     if(Etape == 4 && digitalRead(C_FC_descenteFil_haut1) == 1 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
-//     {
-//       Serial.print("Num etape: ");
-//       Serial.println(Etape);
-//       while(NbPas_M_grille < 1200)
-//       {
-//         digitalWrite(D_M_grille, LOW); //recule (vers ca pos initiale)
-//         digitalWrite(M_grille, HIGH);
-//         delay(3);
-//         digitalWrite(M_grille, LOW);
-//         delay(3); 
-//         NbPas_M_grille++;
-//       }
-//       Etape = 6;
-//     }
-//     //alignement de la grille avec le gabari en mode tranche
-//     if(Etape == 5 && digitalRead(C_FC_descenteFil_haut1) == 1 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
-//     {
-//       Serial.print("Num etape: ");
-//       Serial.println(Etape);
-//       while(NbPas_M_grille < 2300)
-//       {
-//         digitalWrite(D_M_grille, LOW); //recule (vers ca pos initiale)
-//         digitalWrite(M_grille, HIGH);
-//         delay(3);
-//         digitalWrite(M_grille, LOW);
-//         delay(3); 
-//         NbPas_M_grille++;
-//       }
-//       Etape = 6;
-//     }
+  //       Etape = 3;
+  //     }
+  //     if(Etape == 2 && E_BP_cube == 0 && digitalRead(C_pos_grille1) == 1) //cube
+  //     {
+  //       Serial.print("Num etape: ");
+  //       Serial.println(Etape);
 
-//     //descente du gabari
-//     if(Etape == 6 && NbPas_M_grille >= 1200)
-//     {
-//       Serial.print("Num etape: ");
-//       Serial.println(Etape);
-      
-//       while(digitalRead(C_FC_verin_sorti) == 0 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
-//       {
-//         digitalWrite(V_gabari_entre1, HIGH);
-//         digitalWrite(V_gabari_entre2, LOW);
-//         analogWrite(V_gabari_PWM, 255);
-//       }
-//       digitalWrite(V_gabari_entre1, LOW);
-//       digitalWrite(V_gabari_entre2, LOW);
+  //       while(digitalRead(C_pos_grille2) == 0 && flagArretUrgence == LOW && flagStop == LOW)
+  //       {
+  //         digitalWrite(D_M_grille, HIGH); //avance vers l opposé du coffret electrique
+  //         digitalWrite(M_grille, HIGH);
+  //         delay(1);
+  //         digitalWrite(M_grille, LOW);
+  //         delay(1);
+  //       }
 
-//       Etape = 7;
-//     }
+  //       trancheuse();
+  //       Etape = 4;
+  //     }
+  //     if(Etape == 2 && E_BP_batonnet == 0 && digitalRead(C_pos_grille1) == 1) //batonnet
+  //     {
+  //       Serial.print("Num etape: ");
+  //       Serial.println(Etape);
+  //       while(digitalRead(C_pos_grille3) == 0 && flagArretUrgence == LOW && flagStop == LOW)
+  //       {
 
-//     //remontée du gabari
-//     if(Etape == 7 && digitalRead(C_FC_verin_sorti) == 1)
-//     {
-//       Serial.print("Num etape: ");
-//       Serial.println(Etape);
-//       while(digitalRead(C_FC_verin_entre) == 0 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
-//       {
-//         digitalWrite(V_gabari_entre1, LOW);
-//         digitalWrite(V_gabari_entre2, HIGH);
-//         analogWrite(V_gabari_PWM, 255);
-//       }
+  //         digitalWrite(D_M_grille, HIGH); //avance vers l opposé du coffret electrique
+  //         digitalWrite(M_grille, HIGH);
+  //         delay(1);
+  //         digitalWrite(M_grille, LOW);
+  //         delay(1);
+  //       }
 
-//       digitalWrite(V_gabari_entre1, LOW);
-//       digitalWrite(V_gabari_entre2, LOW);
+  //     trancheuse();
+  //     Etape = 5;
+  //     }
 
-//       NbPas_M_avancer = 0;
-//       NbPas_M_decoupe1 = 0;
-//       NbPas_M_decoupe2 = 0;
-//       NbPas_M_grille = 0;
-//       nbPas_V = 0;
-//       prevMillis = 0;
-//       NbPas_M_decoupe_T = 0;
+  //     //alignement de la grille avec le gabari en mode cube
+  //     if(Etape == 4 && digitalRead(C_FC_descenteFil_haut1) == 1 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
+  //     {
+  //       Serial.print("Num etape: ");
+  //       Serial.println(Etape);
+  //       while(NbPas_M_grille < 1200)
+  //       {
+  //         digitalWrite(D_M_grille, LOW); //recule (vers ca pos initiale)
+  //         digitalWrite(M_grille, HIGH);
+  //         delay(3);
+  //         digitalWrite(M_grille, LOW);
+  //         delay(3);
+  //         NbPas_M_grille++;
+  //       }
+  //       Etape = 6;
+  //     }
+  //     //alignement de la grille avec le gabari en mode tranche
+  //     if(Etape == 5 && digitalRead(C_FC_descenteFil_haut1) == 1 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
+  //     {
+  //       Serial.print("Num etape: ");
+  //       Serial.println(Etape);
+  //       while(NbPas_M_grille < 2300)
+  //       {
+  //         digitalWrite(D_M_grille, LOW); //recule (vers ca pos initiale)
+  //         digitalWrite(M_grille, HIGH);
+  //         delay(3);
+  //         digitalWrite(M_grille, LOW);
+  //         delay(3);
+  //         NbPas_M_grille++;
+  //       }
+  //       Etape = 6;
+  //     }
 
-//       positionInitiale();
-//       digitalWrite(Led_marche, LOW);
-//       Etape = 0;
-//     }
-//   }
+  //     //descente du gabari
+  //     if(Etape == 6 && NbPas_M_grille >= 1200)
+  //     {
+  //       Serial.print("Num etape: ");
+  //       Serial.println(Etape);
 
-//   //fonction arret d'urgence
-//   if(flagArretUrgence == HIGH)
-//   {
-//     if(tesPasseParLa == LOW)
-//     {
-//       NbPas_M_decoupe1 = 0;
-//     }
-    
+  //       while(digitalRead(C_FC_verin_sorti) == 0 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
+  //       {
+  //         digitalWrite(V_gabari_entre1, HIGH);
+  //         digitalWrite(V_gabari_entre2, LOW);
+  //         analogWrite(V_gabari_PWM, 255);
+  //       }
+  //       digitalWrite(V_gabari_entre1, LOW);
+  //       digitalWrite(V_gabari_entre2, LOW);
 
-//     //arret led marche et activation de la led erreur
-//     digitalWrite(Led_marche, LOW);
-//     digitalWrite(Led_erreur, HIGH);
-//     flagStop = LOW;
+  //       Etape = 7;
+  //     }
 
-//     //remontée du gabari de 4,5 cm
-//     if(digitalRead(C_FC_verin_entre) == 0 && Verin_OK_temp == LOW) //si le vérin n'est pas déja en haut
-//     {
-//       Serial.println("Remonté du vérin en cours");
-//       prevMillis = millis();
-      
+  //     //remontée du gabari
+  //     if(Etape == 7 && digitalRead(C_FC_verin_sorti) == 1)
+  //     {
+  //       Serial.print("Num etape: ");
+  //       Serial.println(Etape);
+  //       while(digitalRead(C_FC_verin_entre) == 0 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
+  //       {
+  //         digitalWrite(V_gabari_entre1, LOW);
+  //         digitalWrite(V_gabari_entre2, HIGH);
+  //         analogWrite(V_gabari_PWM, 255);
+  //       }
 
-//       while( millis() < prevMillis +3000)//pendant 3 sec, vt max est de 1,5 cm/s //rajouter le truc ede merde avec le machin qui mon en fonction du pas relou
-//       {
-//         digitalWrite(V_gabari_entre1, LOW);
-//         digitalWrite(V_gabari_entre2, HIGH);
-//         analogWrite(V_gabari_PWM, 255);
-//       }
-//       digitalWrite(V_gabari_entre1, LOW);
-//       digitalWrite(V_gabari_entre2, LOW);
-//       Verin_OK_temp = HIGH;
-//       Serial.println("t es sorti");
-//     }
+  //       digitalWrite(V_gabari_entre1, LOW);
+  //       digitalWrite(V_gabari_entre2, LOW);
 
-//     //IL Y A UN PB ICI
-//     //remontée de la trancheuse 
-//     Serial.println("La remontée de la trancheuse va débuter");
-    
-//     while(NbPas_M_decoupe1 < 10000  && (digitalRead(C_FC_descenteFil_haut1) == 0 && digitalRead(C_FC_descenteFil_haut2) == 0) && tesPasseParLa == LOW) //5cm de hauteur
-//     {
-//       digitalWrite(D_M_decoupe1, HIGH); //monte
-//       digitalWrite(D_M_decoupe2, HIGH);
-//       digitalWrite(M_decoupe1, HIGH);
-//       digitalWrite(M_decoupe2, HIGH);
-//       delayMicroseconds(571);
-//       digitalWrite(M_decoupe1, LOW);
-//       digitalWrite(M_decoupe2, LOW);
-//       delayMicroseconds(571);
-//       NbPas_M_decoupe1++;
-//     }
-//   Serial.println("la trancheuse est remontée");
-//   tesPasseParLa = HIGH;
+  //       NbPas_M_avancer = 0;
+  //       NbPas_M_decoupe1 = 0;
+  //       NbPas_M_decoupe2 = 0;
+  //       NbPas_M_grille = 0;
+  //       nbPas_V = 0;
+  //       prevMillis = 0;
+  //       NbPas_M_decoupe_T = 0;
 
-//     if(digitalRead(BP_resetPosition) == 0 && digitalRead(BP_AU) == 0)
-//     {
-//         Serial.println("tu as appuyé sur le bp reset position");
-//         flagArretUrgence = LOW;
-//         positionInitiale();
-//         Etape = 0;
-//     }
-//   }
-  
-//   //fonction stop
-//   if(flagStop == HIGH)
-//   {
+  //       positionInitiale();
+  //       digitalWrite(Led_marche, LOW);
+  //       Etape = 0;
+  //     }
+  //   }
 
-//     flagArretUrgence = LOW;
+  //   //fonction arret d'urgence
+  //   if(flagArretUrgence == HIGH)
+  //   {
+  //     if(tesPasseParLa == LOW)
+  //     {
+  //       NbPas_M_decoupe1 = 0;
+  //     }
 
-//     //arret led marche et activation de la led erreur
-//     digitalWrite(Led_marche, LOW);
-//     digitalWrite(Led_erreur, HIGH);
+  //     //arret led marche et activation de la led erreur
+  //     digitalWrite(Led_marche, LOW);
+  //     digitalWrite(Led_erreur, HIGH);
+  //     flagStop = LOW;
 
-//     //arret de toutes les sorties
-//     digitalWrite(V_gabari_entre1, LOW);
-//     digitalWrite(V_gabari_entre2, LOW);
+  //     //remontée du gabari de 4,5 cm
+  //     if(digitalRead(C_FC_verin_entre) == 0 && Verin_OK_temp == LOW) //si le vérin n'est pas déja en haut
+  //     {
+  //       Serial.println("Remonté du vérin en cours");
+  //       prevMillis = millis();
 
-//     digitalWrite(M_decoupe1, HIGH); 
-//     digitalWrite(M_decoupe2, HIGH);
-//     digitalWrite(M_avancer, HIGH);
-//     digitalWrite(M_grille, HIGH);
+  //       while( millis() < prevMillis +3000)//pendant 3 sec, vt max est de 1,5 cm/s //rajouter le truc ede merde avec le machin qui mon en fonction du pas relou
+  //       {
+  //         digitalWrite(V_gabari_entre1, LOW);
+  //         digitalWrite(V_gabari_entre2, HIGH);
+  //         analogWrite(V_gabari_PWM, 255);
+  //       }
+  //       digitalWrite(V_gabari_entre1, LOW);
+  //       digitalWrite(V_gabari_entre2, LOW);
+  //       Verin_OK_temp = HIGH;
+  //       Serial.println("t es sorti");
+  //     }
 
-//     if(digitalRead(BP_resetPosition) == 0) 
-//     {
-//         Serial.println("tu as appuyé sur le bp reset position");
-//         flagStop = LOW;
-//         positionInitiale();
-//         Etape = 0;
-        
-//     }
-//   }
-  
-//   //fonction porte ouverte
-//   while(flagPorteOuverte == HIGH) //porte ouverte
-//   {
+  //     //IL Y A UN PB ICI
+  //     //remontée de la trancheuse
+  //     Serial.println("La remontée de la trancheuse va débuter");
 
-//     digitalWrite(Led_marche, LOW);
-//     digitalWrite(Led_erreur, HIGH);
+  //     while(NbPas_M_decoupe1 < 10000  && (digitalRead(C_FC_descenteFil_haut1) == 0 && digitalRead(C_FC_descenteFil_haut2) == 0) && tesPasseParLa == LOW) //5cm de hauteur
+  //     {
+  //       digitalWrite(D_M_decoupe1, HIGH); //monte
+  //       digitalWrite(D_M_decoupe2, HIGH);
+  //       digitalWrite(M_decoupe1, HIGH);
+  //       digitalWrite(M_decoupe2, HIGH);
+  //       delayMicroseconds(571);
+  //       digitalWrite(M_decoupe1, LOW);
+  //       digitalWrite(M_decoupe2, LOW);
+  //       delayMicroseconds(571);
+  //       NbPas_M_decoupe1++;
+  //     }
+  //   Serial.println("la trancheuse est remontée");
+  //   tesPasseParLa = HIGH;
 
-//     //arret de toutes les sorties
-//     digitalWrite(V_gabari_entre1, LOW);
-//     digitalWrite(V_gabari_entre2, LOW);
+  //     if(digitalRead(BP_resetPosition) == 0 && digitalRead(BP_AU) == 0)
+  //     {
+  //         Serial.println("tu as appuyé sur le bp reset position");
+  //         flagArretUrgence = LOW;
+  //         positionInitiale();
+  //         Etape = 0;
+  //     }
+  //   }
 
-//     digitalWrite(M_decoupe1, HIGH); 
-//     digitalWrite(M_decoupe2, HIGH);
-//     digitalWrite(M_avancer, HIGH);
-//     digitalWrite(M_grille, HIGH);
+  //   //fonction stop
+  //   if(flagStop == HIGH)
+  //   {
 
-//     if(digitalRead(BP_resetPosition) == 0 && digitalRead(C_porteOuverte) == 1) 
-//     {
-//         Serial.println("tu as appuyé sur le bp reset position");
-//         flagPorteOuverte = LOW;    
-//         positionInitiale();
-//         Etape = 0;    
-//     }
-//   }
+  //     flagArretUrgence = LOW;
 
- }
+  //     //arret led marche et activation de la led erreur
+  //     digitalWrite(Led_marche, LOW);
+  //     digitalWrite(Led_erreur, HIGH);
+
+  //     //arret de toutes les sorties
+  //     digitalWrite(V_gabari_entre1, LOW);
+  //     digitalWrite(V_gabari_entre2, LOW);
+
+  //     digitalWrite(M_decoupe1, HIGH);
+  //     digitalWrite(M_decoupe2, HIGH);
+  //     digitalWrite(M_avancer, HIGH);
+  //     digitalWrite(M_grille, HIGH);
+
+  //     if(digitalRead(BP_resetPosition) == 0)
+  //     {
+  //         Serial.println("tu as appuyé sur le bp reset position");
+  //         flagStop = LOW;
+  //         positionInitiale();
+  //         Etape = 0;
+
+  //     }
+  //   }
+
+  //   //fonction porte ouverte
+  //   while(flagPorteOuverte == HIGH) //porte ouverte
+  //   {
+
+  //     digitalWrite(Led_marche, LOW);
+  //     digitalWrite(Led_erreur, HIGH);
+
+  //     //arret de toutes les sorties
+  //     digitalWrite(V_gabari_entre1, LOW);
+  //     digitalWrite(V_gabari_entre2, LOW);
+
+  //     digitalWrite(M_decoupe1, HIGH);
+  //     digitalWrite(M_decoupe2, HIGH);
+  //     digitalWrite(M_avancer, HIGH);
+  //     digitalWrite(M_grille, HIGH);
+
+  //     if(digitalRead(BP_resetPosition) == 0 && digitalRead(C_porteOuverte) == 1)
+  //     {
+  //         Serial.println("tu as appuyé sur le bp reset position");
+  //         flagPorteOuverte = LOW;
+  //         positionInitiale();
+  //         Etape = 0;
+  //     }
+  //   }
+}
 
 void arretUrgence()
 {
@@ -909,165 +966,163 @@ void PorteOuverte()
 
 void positionInitiale()
 {
-    digitalWrite(Led_erreur, LOW);
-    
-    //remontée du vérin
-    while(digitalRead(C_FC_verin_entre) == 0 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
-    {
-        digitalWrite(V_gabari_entre1, LOW);
-        digitalWrite(V_gabari_entre2, HIGH);
-        analogWrite(V_gabari_PWM, 255);
-    }
-    Serial.println("Vérin monté");
+  digitalWrite(Led_erreur, LOW);
 
-    //remontée du fil
-    E_C_FC_descenteFil_haut1 = digitalRead(C_FC_descenteFil_haut1);
-    E_C_FC_descenteFil_haut2 = digitalRead(C_FC_descenteFil_haut2);
-    
-    
-    while((digitalRead(C_FC_descenteFil_haut1) == 0 || digitalRead(C_FC_descenteFil_haut2) == 0) && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
+  // remontée du vérin
+  while (digitalRead(C_FC_verin_entre) == 0 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
+  {
+    digitalWrite(V_gabari_entre1, LOW);
+    digitalWrite(V_gabari_entre2, HIGH);
+    analogWrite(V_gabari_PWM, 255);
+  }
+  Serial.println("Vérin monté");
+
+  // remontée du fil
+  E_C_FC_descenteFil_haut1 = digitalRead(C_FC_descenteFil_haut1);
+  E_C_FC_descenteFil_haut2 = digitalRead(C_FC_descenteFil_haut2);
+
+  while ((digitalRead(C_FC_descenteFil_haut1) == 0 || digitalRead(C_FC_descenteFil_haut2) == 0) && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
+  {
+    Serial.println("trancheuse activée");
+
+    while (digitalRead(C_FC_descenteFil_haut1) == 0 && digitalRead(C_FC_descenteFil_haut2) == 1 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
     {
-      Serial.println("trancheuse activée");
-      
-        while(digitalRead(C_FC_descenteFil_haut1) == 0 && digitalRead(C_FC_descenteFil_haut2) == 1 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
-        {
-          
-            digitalWrite(D_M_decoupe1, HIGH); // monter
-            digitalWrite(M_decoupe1, HIGH);
-            digitalWrite(M_decoupe2, HIGH);
-            delayMicroseconds(571);
-            digitalWrite(M_decoupe1, LOW);
-            delayMicroseconds(571); 
-        }
-        while(digitalRead(C_FC_descenteFil_haut1) == 1 && digitalRead(C_FC_descenteFil_haut2) == 0 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
-        {
-            digitalWrite(D_M_decoupe2, HIGH);
-            digitalWrite(M_decoupe1, HIGH);
-            digitalWrite(M_decoupe2, HIGH);
-            delayMicroseconds(571);
-            digitalWrite(M_decoupe2, LOW);
-            delayMicroseconds(571);
-        }
-        while(digitalRead(C_FC_descenteFil_haut1) == 0 && digitalRead(C_FC_descenteFil_haut2) == 0 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
-        {
-            digitalWrite(D_M_decoupe1, HIGH);
-            digitalWrite(D_M_decoupe2, HIGH);
-            digitalWrite(M_decoupe1, HIGH);
-            digitalWrite(M_decoupe2, HIGH);
-            delayMicroseconds(571);
-            digitalWrite(M_decoupe1, LOW);
-            digitalWrite(M_decoupe2, LOW);
-            delayMicroseconds(571);
-        }
+
+      digitalWrite(D_M_decoupe1, HIGH); // monter
+      digitalWrite(M_decoupe1, HIGH);
+      digitalWrite(M_decoupe2, HIGH);
+      delayMicroseconds(571);
+      digitalWrite(M_decoupe1, LOW);
+      delayMicroseconds(571);
     }
-    Serial.println("trancheuse coupé");
-    Serial.println("grille activée");
-    //retour a la position initiale de la grille
-    while(digitalRead(C_pos_grille1) == 0 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW) 
+    while (digitalRead(C_FC_descenteFil_haut1) == 1 && digitalRead(C_FC_descenteFil_haut2) == 0 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
     {
-      
-      digitalWrite(D_M_grille, LOW); //recule
-      digitalWrite(M_grille, HIGH);
-      delay(1);
-      digitalWrite(M_grille, LOW);
-      delay(1); 
+      digitalWrite(D_M_decoupe2, HIGH);
+      digitalWrite(M_decoupe1, HIGH);
+      digitalWrite(M_decoupe2, HIGH);
+      delayMicroseconds(571);
+      digitalWrite(M_decoupe2, LOW);
+      delayMicroseconds(571);
     }
-    Serial.println("Grille rentrée");
+    while (digitalRead(C_FC_descenteFil_haut1) == 0 && digitalRead(C_FC_descenteFil_haut2) == 0 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
+    {
+      digitalWrite(D_M_decoupe1, HIGH);
+      digitalWrite(D_M_decoupe2, HIGH);
+      digitalWrite(M_decoupe1, HIGH);
+      digitalWrite(M_decoupe2, HIGH);
+      delayMicroseconds(571);
+      digitalWrite(M_decoupe1, LOW);
+      digitalWrite(M_decoupe2, LOW);
+      delayMicroseconds(571);
+    }
+  }
+  Serial.println("trancheuse coupé");
+  Serial.println("grille activée");
+  // retour a la position initiale de la grille
+  while (digitalRead(C_pos_grille1) == 0 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
+  {
+
+    digitalWrite(D_M_grille, LOW); // recule
+    digitalWrite(M_grille, HIGH);
+    delay(1);
+    digitalWrite(M_grille, LOW);
+    delay(1);
+  }
+  Serial.println("Grille rentrée");
 }
 
 void trancheuse()
 {
-  //descente de la trancheuse
-    if((((digitalRead(C_pos_grille3) && E_BP_batonnet == 0) || (E_BP_cube == 0 && digitalRead(C_pos_grille2)) || (E_BP_tranche == 0 && digitalRead(C_pos_grille1)))) && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
+  // descente de la trancheuse
+  if ((((digitalRead(C_pos_grille3) && E_BP_batonnet == 0) || (E_BP_cube == 0 && digitalRead(C_pos_grille2)) || (E_BP_tranche == 0 && digitalRead(C_pos_grille1)))) && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
+  {
+    Serial.print("Num etape: ");
+    Serial.println(Etape);
+    // 8700 * 34 800
+    while (NbPas_M_decoupe1 < 34800 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW) // 200*8cm les 200 en plus sont pour desendre le fil au plus bas
     {
-      Serial.print("Num etape: ");
-      Serial.println(Etape);
-      //8700 * 34 800
-      while(NbPas_M_decoupe1 < 34800 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW) //200*8cm les 200 en plus sont pour desendre le fil au plus bas
-      {
-        digitalWrite(D_M_decoupe1, LOW); //descend
-        digitalWrite(D_M_decoupe2, LOW);
-        digitalWrite(M_decoupe1, HIGH);
-        digitalWrite(M_decoupe2, HIGH);
-        delayMicroseconds(571);
-        digitalWrite(M_decoupe1, LOW);
-        digitalWrite(M_decoupe2, LOW);
-        delayMicroseconds(571); 
-        NbPas_M_decoupe1++;
-      }
+      digitalWrite(D_M_decoupe1, LOW); // descend
+      digitalWrite(D_M_decoupe2, LOW);
+      digitalWrite(M_decoupe1, HIGH);
+      digitalWrite(M_decoupe2, HIGH);
+      delayMicroseconds(571);
+      digitalWrite(M_decoupe1, LOW);
+      digitalWrite(M_decoupe2, LOW);
+      delayMicroseconds(571);
+      NbPas_M_decoupe1++;
     }
+  }
 
-    //remontée de la trancheuse
-    if( NbPas_M_decoupe1 >= 34800 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW) 
+  // remontée de la trancheuse
+  if (NbPas_M_decoupe1 >= 34800 && flagArretUrgence == LOW && flagStop == LOW && flagPorteOuverte == LOW)
+  {
+    Serial.print("Num etape: ");
+    Serial.println(Etape);
+    while (digitalRead(C_FC_descenteFil_haut1) == 0)
     {
-      Serial.print("Num etape: ");
-      Serial.println(Etape);
-      while(digitalRead(C_FC_descenteFil_haut1) == 0)
-      {
-        digitalWrite(D_M_decoupe1, HIGH); //monte
-        digitalWrite(D_M_decoupe2, HIGH);
-        digitalWrite(M_decoupe1, HIGH);
-        digitalWrite(M_decoupe2, HIGH);
-        delayMicroseconds(571);
-        digitalWrite(M_decoupe1, LOW);
-        digitalWrite(M_decoupe2, LOW);
-        delayMicroseconds(571);
-      }
+      digitalWrite(D_M_decoupe1, HIGH); // monte
+      digitalWrite(D_M_decoupe2, HIGH);
+      digitalWrite(M_decoupe1, HIGH);
+      digitalWrite(M_decoupe2, HIGH);
+      delayMicroseconds(571);
+      digitalWrite(M_decoupe1, LOW);
+      digitalWrite(M_decoupe2, LOW);
+      delayMicroseconds(571);
     }
-
+  }
 }
 
-//MOTEUR 1 ET 2 SACAD2 L UN APRES L AUTRE
-// if(BP_start == 1)
-// {
-//   long nbStep = 200;
-//   stepper_M_decoupe1.setSpeedInStepsPerSecond(200);// nb step/sec
-//   stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(1600); 
-//   stepper_M_decoupe1.moveRelativeInSteps(nbStep); //200 step par 2 mm
-//   stepper_M_decoupe2.setSpeedInStepsPerSecond(200);
-//   stepper_M_decoupe2.setAccelerationInStepsPerSecondPerSecond(1600); 
-//   stepper_M_decoupe2.moveRelativeInSteps(nbStep);
-// }
+// MOTEUR 1 ET 2 SACAD2 L UN APRES L AUTRE
+//  if(BP_start == 1)
+//  {
+//    long nbStep = 200;
+//    stepper_M_decoupe1.setSpeedInStepsPerSecond(200);// nb step/sec
+//    stepper_M_decoupe1.setAccelerationInStepsPerSecondPerSecond(1600);
+//    stepper_M_decoupe1.moveRelativeInSteps(nbStep); //200 step par 2 mm
+//    stepper_M_decoupe2.setSpeedInStepsPerSecond(200);
+//    stepper_M_decoupe2.setAccelerationInStepsPerSecondPerSecond(1600);
+//    stepper_M_decoupe2.moveRelativeInSteps(nbStep);
+//  }
 
-//AVANCE JUSQU AU FIN DE COURSE
-// stepper_M_decoupe1.moveToHomeInRevolutions(Valeur_D_M_decoupe1, 10, 1000, BP_start);
-// stepper_M_decoupe2.moveToHomeInRevolutions(Valeur_D_M_decoupe1, 10, 1000, BP_resetPosition);
+// AVANCE JUSQU AU FIN DE COURSE
+//  stepper_M_decoupe1.moveToHomeInRevolutions(Valeur_D_M_decoupe1, 10, 1000, BP_start);
+//  stepper_M_decoupe2.moveToHomeInRevolutions(Valeur_D_M_decoupe1, 10, 1000, BP_resetPosition);
 
-//SI FC PAS ACTIVE, MOTEUR 1 ET 2 FONCTIONNE EN MEME TEMPS
-//   while(E_BP_stop == 1 && E_BP_resetPosition == 1)
-//   {
-//   digitalWrite(D_M_decoupe1, HIGH);
-//   digitalWrite(D_M_decoupe2, HIGH);
-//   digitalWrite(M_decoupe1, HIGH);
-//   digitalWrite(M_decoupe2, HIGH);
-//   delay(1);
-//   digitalWrite(M_decoupe1, LOW);
-//   digitalWrite(M_decoupe2, LOW);
-//   delay(1); 
-//   E_BP_stop = digitalRead(BP_stop);
-//   E_BP_resetPosition = digitalRead(BP_resetPosition);
-//   }
+// SI FC PAS ACTIVE, MOTEUR 1 ET 2 FONCTIONNE EN MEME TEMPS
+//    while(E_BP_stop == 1 && E_BP_resetPosition == 1)
+//    {
+//    digitalWrite(D_M_decoupe1, HIGH);
+//    digitalWrite(D_M_decoupe2, HIGH);
+//    digitalWrite(M_decoupe1, HIGH);
+//    digitalWrite(M_decoupe2, HIGH);
+//    delay(1);
+//    digitalWrite(M_decoupe1, LOW);
+//    digitalWrite(M_decoupe2, LOW);
+//    delay(1);
+//    E_BP_stop = digitalRead(BP_stop);
+//    E_BP_resetPosition = digitalRead(BP_resetPosition);
+//    }
 
-//MOTEUR AVANCE FAST
-//  E_BP_start = digitalRead(BP_start);
-//   E_BP_resetPosition = digitalRead(BP_resetPosition);
-//   if(E_BP_start == 0)
-//   { 
-//     digitalWrite(Led_marche,HIGH);
-//    long nbStep = -20000; //- reculer +avancé
-//   stepper_M_avancer.setSpeedInStepsPerSecond(400);// nb step/sec
-//   stepper_M_avancer.setAccelerationInStepsPerSecondPerSecond(1600); 
-//   stepper_M_avancer.moveRelativeInSteps(nbStep); //200 step par 2 mm
-//   }
+// MOTEUR AVANCE FAST
+//   E_BP_start = digitalRead(BP_start);
+//    E_BP_resetPosition = digitalRead(BP_resetPosition);
+//    if(E_BP_start == 0)
+//    {
+//      digitalWrite(Led_marche,HIGH);
+//     long nbStep = -20000; //- reculer +avancé
+//    stepper_M_avancer.setSpeedInStepsPerSecond(400);// nb step/sec
+//    stepper_M_avancer.setAccelerationInStepsPerSecondPerSecond(1600);
+//    stepper_M_avancer.moveRelativeInSteps(nbStep); //200 step par 2 mm
+//    }
 
 // GESTION VERIN
 // E_BP_stop = digitalRead(BP_stop);
 //   E_BP_resetPosition = digitalRead(BP_resetPosition);
-  
+
 //   while(E_BP_stop == 1 && E_BP_resetPosition == 1)
 //   {
 //     //DESCENTE DU VERIN
- 
+
 //       digitalWrite(V_gabari_entre1, LOW);
 //       digitalWrite(V_gabari_entre2, LOW);
 //       delay(100);
@@ -1097,15 +1152,15 @@ void trancheuse()
 
 //   }
 
-  //MOTEUR AVANCE FAST
+// MOTEUR AVANCE FAST
 //  E_BP_start = digitalRead(BP_start);
 //   E_BP_resetPosition = digitalRead(BP_resetPosition);
 //   if(E_BP_start == 0)
-//   { 
+//   {
 //     digitalWrite(Led_marche,HIGH);
 //    long nbStep = -20000; //- reculer +avancé
 //   stepper_M_avancer.setSpeedInStepsPerSecond(400);// nb step/sec
-//   stepper_M_avancer.setAccelerationInStepsPerSecondPerSecond(1600); 
+//   stepper_M_avancer.setAccelerationInStepsPerSecondPerSecond(1600);
 //   stepper_M_avancer.moveRelativeInSteps(nbStep); //200 step par 2 mm
 //   }
 
@@ -1118,12 +1173,12 @@ void trancheuse()
 //       delay(1);
 //       digitalWrite(M_decoupe1, LOW);
 //       digitalWrite(M_decoupe2, LOW);
-//       delay(1); 
+//       delay(1);
 //       NbPas_M_avancer++;
 //     }
 
-  // if(Etape == 3 && ((digitalRead(E_C_pos_grille3) == 0 && E_BP_batonnet == 0)||(digitalRead(E_C_pos_grille2) == 0 && E_BP_cube == 0)||(digitalRead(E_C_pos_grille1) == 0 && E_BP_tranche == 0)) )
-  // {
-  //   while()
+// if(Etape == 3 && ((digitalRead(E_C_pos_grille3) == 0 && E_BP_batonnet == 0)||(digitalRead(E_C_pos_grille2) == 0 && E_BP_cube == 0)||(digitalRead(E_C_pos_grille1) == 0 && E_BP_tranche == 0)) )
+// {
+//   while()
 
-  // }
+// }
